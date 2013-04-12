@@ -1,0 +1,31 @@
+!.gitignore
+
+# Visual Studio build objects
+bin/
+csx/
+obj/
+
+# Windows Azure Publish Settings contain security keys for accessing your Windows Azure account
+.publishsettings
+
+# Visual Studio user-specific files
+## Useful whenever working as part of a team or on software (like open source) that others will download
+*.suo
+*.user
+
+# Access Control Service integration (via FedUtil or Add STS Reference from VS2010) will create FederationMetadata.xml below this folder
+##=> looks like FederationMetadata.xml is referenced in csproj, so need it in source control
+# FederationMetadata\
+## Multiple applications of FedUtil will result in *.backup.1, *.backup.2, etc., files for Web.config and FederationMetadata.xml
+*.backup.*
+
+# NuGet
+# Also consider letting NuGet automatically restore missing packages for you:
+## http://docs.nuget.org/docs/workflows/using-nuget-without-committing-packages/
+packages/
+
+# ReSharper
+_ReSharper*/
+
+# NCrunch
+*ncrunch*
