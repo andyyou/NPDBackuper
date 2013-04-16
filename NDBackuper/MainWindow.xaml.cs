@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
@@ -19,51 +20,30 @@ namespace NDBackuper
     /// <summary>
     /// MainWindow.xaml 的互動邏輯
     /// </summary>
-    public partial class MainWindow : Window, INotifyPropertyChanged
+    public partial class MainWindow : Window
     {
-        #region Notify Property
-        
-        private bool source_login_security;
-        private bool destination_login_security;
-        public bool UseSourceLoginSecurity
-        {
-            get
-            {
-                return source_login_security;
-            }
-            set
-            {
-                source_login_security = value;
-                RaisePropertyChanged("UseSourceLoginSecurity");
-            }
-        }
-        public bool UseDestinationLoginSecurity {
-            get
-            {
-                return destination_login_security;
-            }
-            set
-            {
-                destination_login_security = value;
-                RaisePropertyChanged("UseDestinationLoginSecurity");
-            }
-        }
-        
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        protected virtual void RaisePropertyChanged(String propertyName)
-        {
-            if ((PropertyChanged != null))
-            {
-                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-            }
-        }
-        #endregion
+        public ConnectionConfig Source { get; set; }
+        public ConnectionConfig Destination { get; set; }
+        public ObservableCollection<CheckedListItem> ObservTables = new ObservableCollection<CheckedListItem>();
 
         #region Constructor
         public MainWindow()
         {
             InitializeComponent();
+            this.Source = new ConnectionConfig();
+            this.Destination = new ConnectionConfig();
+            Source.Server = @"(localdb)\v11.0";
+            Source.UserId = "andy";
+            Source.Password = "xx";
+            Source.LoginSecurity = true;
+            Source.IsRemember = true;
+
+            Destination.Server = "192.168.100.248";
+            Destination.UserId = "apputu";
+            Destination.Password = "oooo";
+            Destination.LoginSecurity = false;
+            Destination.IsRemember = true;
+            
             this.DataContext = this;
 
         }

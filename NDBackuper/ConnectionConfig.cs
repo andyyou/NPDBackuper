@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace NDBackuper
 {
-    public class ConnectionConfig
+    public class ConnectionConfig : INotifyPropertyChanged
     {
         private const string IP_PATTEN = @"([2]([5][0-5]|[0-4][0-9])|[0-1]?[0-9]{1,2})(\.([2]([5][0-5]|[0-4][0-9])|[0-1]?[0-9]{1,2})){3}";
         private const string URL_PATTEN = @"([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,6}";
@@ -18,6 +19,7 @@ namespace NDBackuper
         private string _pwd;
         private string _db;
         private bool _loginSecurity;
+        private bool _isremember;
 
         public string Server
         {
@@ -30,23 +32,53 @@ namespace NDBackuper
                 if (rexIp.IsMatch(value) || rexUrl.IsMatch(value) || rexLocal.IsMatch(value))
                 {
                     _server = value;
+                    RaisePropertyChanged("Server");
                 }
             }
         }
         public string UserId
         {
             get { return _userid; }
-            set { if (!string.IsNullOrEmpty(value)) _userid = value; }
+            set
+            {
+                if (!string.IsNullOrEmpty(value))
+                {
+                    _userid = value; 
+                    RaisePropertyChanged("UserId");
+                }
+            }
         }
         public string Password
         {
             get { return _pwd; }
-            set { if (!string.IsNullOrEmpty(value)) _pwd = value; }
+            set
+            {
+                if (!string.IsNullOrEmpty(value))
+                {
+                    _pwd = value;
+                    RaisePropertyChanged("Password");
+                }
+            }
         }
         public bool LoginSecurity
         {
             get { return _loginSecurity; }
-            set { if (value != null) _loginSecurity = value; }
+            set
+            {
+                _loginSecurity = value;
+                RaisePropertyChanged("LoginSecurity");
+            }
+        }
+        public bool IsRemember
+        {
+            get {
+                return _isremember;
+            }
+            set
+            {
+                _isremember = value;
+                RaisePropertyChanged("IsRemember");
+            }
         }
         public string Database
         {
@@ -57,6 +89,7 @@ namespace NDBackuper
                 if (rexDb.IsMatch(value))
                 {
                     _db = value;
+                    RaisePropertyChanged("Database");
                 }
             }
         }
@@ -103,5 +136,14 @@ namespace NDBackuper
             return conn;
         }
 
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected virtual void RaisePropertyChanged(String propertyName)
+        {
+            if ((PropertyChanged != null))
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            }
+        }
     }
 }
