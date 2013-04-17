@@ -55,7 +55,10 @@ namespace NDBackuper
         }
         protected bool CheckVersion()
         {
-
+            var x = DbHelper.ReadOne(Source.ConnectionString(),
+                             "Select TOP 1 * From WebDBVersion Order By klKey DESC");
+            var y = DbHelper.ReadOne(Destination.ConnectionString(),
+                             "Select TOP 1 * From WebDBVersion Order By klKey DESC");
             return false;
         }
         #region Threads
