@@ -26,7 +26,7 @@ namespace NDBackuper
         public ConnectionConfig Source { get; set; }
         public ConnectionConfig Destination { get; set; }
         public List<string> SourceDatabases { get; set; }
-        public ObservableCollection<CheckedListItem> ObservTables = new ObservableCollection<CheckedListItem>();
+        public ObservableCollection<CheckedListItem> ObservTables { get; set; }
 
         #region Constructor
         public MainWindow()
@@ -35,6 +35,7 @@ namespace NDBackuper
             this.Source = new ConnectionConfig();
             this.Destination = new ConnectionConfig();
             this.SourceDatabases = new List<string>();
+            this.ObservTables = new ObservableCollection<CheckedListItem>();
             // Load properties
             Source.Name = "Source";
             Source.Server = Properties.Settings.Default.SourceServer;
@@ -55,7 +56,8 @@ namespace NDBackuper
         }
         #endregion
 
-        #region Controls Events
+        #region Events
+        #region Page-1
         // 驗證 Source Connection
         protected void btnSourceConnValidation_Click(object sender, RoutedEventArgs e)
         {
@@ -65,6 +67,41 @@ namespace NDBackuper
             bgw.WorkerReportsProgress = true;
             bgw.RunWorkerAsync(Source);
         }
+        private void SourceRemember_Click(object sender, RoutedEventArgs e)
+        {
+            Properties.Settings.Default.SourceIsRemember = Source.IsRemember;
+            if (!Source.IsRemember)
+            {
+                Properties.Settings.Default.SourceServer = "";
+                Properties.Settings.Default.SourceUserId = "";
+                Properties.Settings.Default.SourcePassword = "";
+                Properties.Settings.Default.SourceLoginSecurity = false;
+            }
+            Properties.Settings.Default.Save();
+        }
+        #endregion
+
+       
+       
+        #region Page-2
+        // P2-1: Combobox Select Event
+        private void SourceDatabases_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            ComboBox combo = sender as ComboBox;
+            if (combo != null && combo.SelectedIndex > 0 )
+            {
+                Source.Database = combo.SelectedItem.ToString();
+                LoadTables(Source.ConnectionString());
+            }
+            else
+            {
+                ObservTables.Clear();
+            }
+
+        }
+        #endregion
+
+        #region Page-3
         // 驗證 Destination Connection
         protected void btnDestinationConnValidation_Click(object sender, RoutedEventArgs e)
         {
@@ -74,6 +111,79 @@ namespace NDBackuper
             bgw.WorkerReportsProgress = true;
             bgw.RunWorkerAsync(Destination);
         }
+        private void DestinationRemember_Click(object sender, RoutedEventArgs e)
+        {
+            Properties.Settings.Default.DestinationIsRemember = Destination.IsRemember;
+            if (!Destination.IsRemember)
+            {
+                Properties.Settings.Default.DestinationServer = "";
+                Properties.Settings.Default.DestinationUserId = "";
+                Properties.Settings.Default.DestinationPassword = "";
+                Properties.Settings.Default.DestinationLoginSecurity = false;
+            }
+            Properties.Settings.Default.Save();
+        }
+        #endregion
+
+        #region Page-4
+        
+        #endregion
+
+        #region Page-5
+        
+        #endregion
+
+        #region Wizard Events
+        // Close
+        private void wzdMain_Cancelled(object sender, RoutedEventArgs e)
+        {
+            this.Close();
+        }
+        private void Wizard_Commit(object sender, AvalonWizard.WizardPageConfirmEventArgs e)
+        {
+            switch (e.Page.Name)
+            {
+                case "wzdPage1":
+                    if (!Source.IsValidate)
+                    {
+                        int time = 0;
+                        while (!Source.RunValidateConnection() && time < 1)
+                        {
+                            time++;
+                        }
+                        if (!Source.IsValidate)
+                        {
+                            e.Cancel = true;
+                            imgSourceStatus.Visibility = System.Windows.Visibility.Visible;
+                        }
+                        else
+                        {
+                            SourceDatabases = LoadDatabases(Source.ConnectionString());
+                            cmbSourceDatabases.SelectedIndex = 0;
+                        }
+                    }
+                    else
+                    {
+                        imgSourceStatus.Visibility = System.Windows.Visibility.Hidden;
+                        SourceDatabases = LoadDatabases(Source.ConnectionString());
+                        cmbSourceDatabases.SelectedIndex = 0;
+                    }
+                    break;
+                case "wzdPage2":
+                    break;
+                case "wzdPage3":
+                    break;
+                case "wzdPage4":
+                    break;
+                case "wzdPage5":
+                    break;
+            }
+        }
+
+        #endregion
+        #endregion
+
+        #region DRY
         protected void SavePorperties(ConnectionConfig conn)
         {
             if (conn.IsValidate)
@@ -102,6 +212,7 @@ namespace NDBackuper
         private List<string> LoadDatabases(string connstring)
         {
             List<string> databases = new List<string>();
+            databases.Add("=== Select Database ===");
             using (SqlConnection conn = new System.Data.SqlClient.SqlConnection(connstring))
             {
                 try
@@ -149,77 +260,6 @@ namespace NDBackuper
                 }
             }
         }
-        private void SourceRemember_Click(object sender, RoutedEventArgs e)
-        {
-            Properties.Settings.Default.SourceIsRemember = Source.IsRemember;
-            if (!Source.IsRemember)
-            {
-                Properties.Settings.Default.SourceServer = "";
-                Properties.Settings.Default.SourceUserId = "";
-                Properties.Settings.Default.SourcePassword = "";
-                Properties.Settings.Default.SourceLoginSecurity = false;
-            }
-            Properties.Settings.Default.Save();
-        }
-        private void DestinationRemember_Click(object sender, RoutedEventArgs e)
-        {
-            Properties.Settings.Default.DestinationIsRemember = Destination.IsRemember;
-            if (!Destination.IsRemember)
-            {
-                Properties.Settings.Default.DestinationServer = "";
-                Properties.Settings.Default.DestinationUserId = "";
-                Properties.Settings.Default.DestinationPassword = "";
-                Properties.Settings.Default.DestinationLoginSecurity = false;
-            }
-            Properties.Settings.Default.Save();
-        }
-        #endregion
-
-        #region Wizard Events
-        // Close
-        private void wzdMain_Cancelled(object sender, RoutedEventArgs e)
-        {
-            this.Close();
-        }
-        private void Wizard_Commit(object sender, AvalonWizard.WizardPageConfirmEventArgs e)
-        {
-            switch (e.Page.Name)
-            {
-                case "wzdPage1":
-                    if (!Source.IsValidate)
-                    {
-                        int time = 0;
-                        while (!Source.RunValidateConnection() && time < 1)
-                        {
-                            time++;
-                        }
-                        if (!Source.IsValidate)
-                        {
-                            e.Cancel = true;
-                            imgSourceStatus.Visibility = System.Windows.Visibility.Visible;
-                        }
-                        else
-                        {
-                            SourceDatabases = LoadDatabases(Source.ConnectionString());
-                        }
-                    }
-                    else
-                    {
-                        imgSourceStatus.Visibility = System.Windows.Visibility.Hidden;
-                        SourceDatabases = LoadDatabases(Source.ConnectionString());
-                    }
-                    break;
-                case "wzdPage2":
-                    break;
-                case "wzdPage3":
-                    break;
-                case "wzdPage4":
-                    break;
-                case "wzdPage5":
-                    break;
-            }
-        }
-
         #endregion
 
         #region Threads
