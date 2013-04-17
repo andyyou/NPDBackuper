@@ -113,14 +113,17 @@
                               Height="26"
                               Margin="35 5 50 5" 
                               ItemsSource="{Binding Path=SourceDatabases}"
-                              SelectedIndex="0"
+                              SelectionChanged="SourceDatabases_SelectionChanged" 
                               />
                     <Label x:Name="lbSourceTablesTag" 
                            Content="Tables" 
                            Margin="35 5 50 5" 
                            FontSize="14" 
                            FontWeight="Bold" />
-                    <ListBox x:Name="lstSourceTables" Margin="35 5 50 5" Height="300" >
+                    <ListBox x:Name="lstSourceTables" 
+                             Margin="35 5 50 5" 
+                             Height="300" 
+                             ItemsSource="{Binding Path=ObservTables}">
                         <ListBox.ItemTemplate>
                             <HierarchicalDataTemplate>
                                 <CheckBox Content="{Binding Name}" IsChecked="{Binding IsChecked}"/>
