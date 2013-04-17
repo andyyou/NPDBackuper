@@ -64,8 +64,38 @@ namespace NDBackuper
         // 驗證 Destination Connection
         protected void btnDestinationConnValidation_Click(object sender, RoutedEventArgs e)
         {
-
+            BackgroundWorker bgw = new BackgroundWorker();
+            bgw.DoWork += bgwValidateConnection_DoWorkHandler;
+            bgw.RunWorkerCompleted += bgwValidateConnection_RunWorkerCompleted;
+            bgw.WorkerReportsProgress = true;
+            bgw.RunWorkerAsync(Destination);
         }
+        protected void SavePorperties(ConnectionConfig conn)
+        {
+            if (conn.IsValidate)
+            {
+                switch (conn.Name)
+                {
+                    case "Source":
+                        Properties.Settings.Default.SourceServer = Source.Server;
+                        Properties.Settings.Default.SourceUserId = Source.UserId;
+                        Properties.Settings.Default.SourcePassword = Source.Password;
+                        Properties.Settings.Default.SourceLoginSecurity = Source.LoginSecurity;
+                        Properties.Settings.Default.SourceIsRemember = Source.IsRemember;
+                        Properties.Settings.Default.Save();
+                        break;
+                    case "Destination":
+                        Properties.Settings.Default.SourceServer = Source.Server;
+                        Properties.Settings.Default.SourceUserId = Source.UserId;
+                        Properties.Settings.Default.SourcePassword = Source.Password;
+                        Properties.Settings.Default.SourceLoginSecurity = Source.LoginSecurity;
+                        Properties.Settings.Default.SourceIsRemember = Source.IsRemember;
+                        Properties.Settings.Default.Save();
+                        break;
+                }
+            }
+        }
+
         #endregion
 
         #region Wizard Events
@@ -113,6 +143,7 @@ namespace NDBackuper
                     imgDestinationStatus.Visibility = System.Windows.Visibility.Visible;
                     break;
             }
+            SavePorperties(conn);
         }
         #endregion
     }

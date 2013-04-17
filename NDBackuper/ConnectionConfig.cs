@@ -11,10 +11,10 @@ namespace NDBackuper
 {
     public class ConnectionConfig : INotifyPropertyChanged
     {
-        private const string IP_PATTEN = @"([2]([5][0-5]|[0-4][0-9])|[0-1]?[0-9]{1,2})(\.([2]([5][0-5]|[0-4][0-9])|[0-1]?[0-9]{1,2})){3}";
-        private const string URL_PATTEN = @"([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,6}";
+        private const string IP_PATTEN    = @"([2]([5][0-5]|[0-4][0-9])|[0-1]?[0-9]{1,2})(\.([2]([5][0-5]|[0-4][0-9])|[0-1]?[0-9]{1,2})){3}";
+        private const string URL_PATTEN   = @"([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,6}";
         private const string LOCAL_PATTEN = @"([l|L][o|O][c|C][a|A][l|L]|\([l|L][o|O][c|C][a|A][l|L][d|D][b|B]\)\\[\w._\\-]*)";
-        private const string DB_PATTEN = @"^([A-Za-z]*)";
+        private const string DB_PATTEN    = @"^([A-Za-z]*)";
         private string _name;
         private string _server;
         private string _userid;
@@ -88,7 +88,6 @@ namespace NDBackuper
                 RaisePropertyChanged("IsRemember");
             }
         }
-
         public bool IsValidate
         { 
             get{
@@ -118,7 +117,6 @@ namespace NDBackuper
             this.Server = @"local";
             this.LoginSecurity = true;
         }
-
         public string ConnectionString()
         {
             string conn = "";
@@ -155,7 +153,6 @@ namespace NDBackuper
 
             return conn;
         }
-
         public void RunValidateConnection()
         {
             if (!String.IsNullOrEmpty(this.ConnectionString()))
@@ -178,10 +175,7 @@ namespace NDBackuper
                 this.IsValidate = false;
             }
         }
-
-
         public event PropertyChangedEventHandler PropertyChanged;
-
         protected virtual void RaisePropertyChanged(String propertyName)
         {
             if ((PropertyChanged != null))
