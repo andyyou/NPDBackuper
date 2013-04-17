@@ -135,6 +135,33 @@ namespace NDBackuper
 
             return conn;
         }
+        public bool ValidateConnection()
+        {
+            if (!String.IsNullOrEmpty(this.ConnectionString()))
+            {
+                BackgroundWorker bgw = new BackgroundWorker();
+                bgw.DoWork += bgwValidateConnection_DoWorkHandler;
+                bgw.RunWorkerCompleted += bgwValidateConnection_RunWorkerCompleted;
+                bgw.WorkerReportsProgress = true;
+                bgw.RunWorkerAsync(this.ConnectionString());
+            }
+            else
+            {
+                return false;
+            }
+            return false;
+        }
+
+        #region Threads
+        public void bgwValidateConnection_DoWorkHandler(object sender, DoWorkEventArgs e)
+        {
+            
+        }
+        private void bgwValidateConnection_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+           
+        }
+        #endregion
 
         public event PropertyChangedEventHandler PropertyChanged;
 

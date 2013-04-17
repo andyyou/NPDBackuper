@@ -32,17 +32,18 @@ namespace NDBackuper
             InitializeComponent();
             this.Source = new ConnectionConfig();
             this.Destination = new ConnectionConfig();
-            Source.Server = @"(localdb)\v11.0";
-            Source.UserId = "andy";
-            Source.Password = "xx";
-            Source.LoginSecurity = true;
-            Source.IsRemember = true;
+            // Load properties
+            Source.Server = Properties.Settings.Default.SourceServer;
+            Source.UserId = Properties.Settings.Default.SourceUserId;
+            Source.Password = Properties.Settings.Default.SourcePassword;
+            Source.LoginSecurity = Properties.Settings.Default.SourceLoginSecurity;
+            Source.IsRemember = Properties.Settings.Default.SourceIsRemember;
 
-            Destination.Server = "192.168.100.248";
-            Destination.UserId = "apputu";
-            Destination.Password = "oooo";
-            Destination.LoginSecurity = false;
-            Destination.IsRemember = true;
+            Destination.Server = Properties.Settings.Default.DestinationServer;
+            Destination.UserId = Properties.Settings.Default.DestinationUserId;
+            Destination.Password = Properties.Settings.Default.DestinationPassword;
+            Destination.LoginSecurity = Properties.Settings.Default.DestinationLoginSecurity;
+            Destination.IsRemember = Properties.Settings.Default.DestinationIsRemember;
             
             this.DataContext = this;
 
@@ -57,7 +58,20 @@ namespace NDBackuper
         }
         private void Wizard_Commit(object sender, AvalonWizard.WizardPageConfirmEventArgs e)
         {
+            switch (e.Page.Name)
+            {
+                case "wzdPage1":
 
+                    break;
+                case "wzdPage2":
+                    break;
+                case "wzdPage3":
+                    break;
+                case "wzdPage4":
+                    break;
+                case "wzdPage5":
+                    break;
+            }
         }
 
         #endregion
