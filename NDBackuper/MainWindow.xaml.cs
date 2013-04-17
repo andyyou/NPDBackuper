@@ -154,14 +154,37 @@ namespace NDBackuper
                     else
                     {
                         imgSourceStatus.Visibility = System.Windows.Visibility.Hidden;
-                        SavePorperties(Source);
+                        if (Source.IsRemember)
+                        {
+                            SavePorperties(Source);
+                        }
                         SourceDatabases = LoadDatabases(Source.ConnectionString());
                         cmbSourceDatabases.SelectedIndex = 0;
                     }
                     break;
                 case "wzdPage2":
+                    if (ObservTables.Where(t => t.IsChecked == true).Count() < 1)
+                    {
+                        MessageBox.Show("Please select at least one table.");
+                        e.Cancel = true;
+                    }
                     break;
                 case "wzdPage3":
+                    Destination.Database = "";
+                    Destination.RunValidateConnection();
+                    if (!Destination.IsValidate)
+                    {
+                        e.Cancel = true;
+                    }
+                    else
+                    {
+                        imgDestinationStatus.Visibility = System.Windows.Visibility.Hidden;
+                        if (Destination.IsRemember)
+                        {
+                            SavePorperties(Destination);
+                        }
+                        txtDestinationDatabaseName.Text = Source.Database;
+                    }
                     break;
                 case "wzdPage4":
                     break;
