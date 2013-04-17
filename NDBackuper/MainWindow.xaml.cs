@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -46,7 +47,7 @@ namespace NDBackuper
             Destination.Password = Properties.Settings.Default.DestinationPassword;
             Destination.LoginSecurity = Properties.Settings.Default.DestinationLoginSecurity;
             Destination.IsRemember = Properties.Settings.Default.DestinationIsRemember;
-            
+
             this.DataContext = this;
 
         }
@@ -86,13 +87,64 @@ namespace NDBackuper
                         Properties.Settings.Default.Save();
                         break;
                     case "Destination":
-                        Properties.Settings.Default.SourceServer = Source.Server;
-                        Properties.Settings.Default.SourceUserId = Source.UserId;
-                        Properties.Settings.Default.SourcePassword = Source.Password;
-                        Properties.Settings.Default.SourceLoginSecurity = Source.LoginSecurity;
-                        Properties.Settings.Default.SourceIsRemember = Source.IsRemember;
+                        Properties.Settings.Default.DestinationServer = Destination.Server;
+                        Properties.Settings.Default.DestinationUserId = Destination.UserId;
+                        Properties.Settings.Default.DestinationPassword = Destination.Password;
+                        Properties.Settings.Default.DestinationLoginSecurity = Destination.LoginSecurity;
+                        Properties.Settings.Default.DestinationIsRemember = Destination.IsRemember;
                         Properties.Settings.Default.Save();
                         break;
+                }
+            }
+        }
+        private List<string> LoadDatabases(string connstring)
+        {
+            List<string> databases = new List<string>();
+            databases.Add("--- Please Select ---");
+            using (SqlConnection conn = new System.Data.SqlClient.SqlConnection(connstring))
+            {
+                try
+                {
+                    conn.Open();
+                }
+                catch (SqlException exp)
+                {
+                    throw new InvalidOperationException("Data could not be read", exp);
+                }
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = conn;
+                //cmd.CommandType = CommandType.StoredProcedure;
+                //cmd.CommandText = "sp_databases";
+                cmd.CommandText = "SELECT name FROM sys.databases WHERE database_id > 4";
+                SqlDataReader dr = cmd.ExecuteReader();
+                while (dr.Read())
+                {
+                    databases.Add(dr[0].ToString());
+                }
+            }
+
+            return databases;
+        }
+        private void LoadTables(string connstring)
+        {
+            using (SqlConnection conn = new System.Data.SqlClient.SqlConnection(connstring))
+            {
+                try
+                {
+                    conn.Open();
+                }
+                catch (SqlException exp)
+                {
+                    throw new InvalidOperationException("Data could not be read", exp);
+                }
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = conn;
+                cmd.CommandText = "SELECT name FROM sys.tables WHERE is_ms_shipped = 0";
+                SqlDataReader dr = cmd.ExecuteReader();
+                ObservTables.Clear();
+                while (dr.Read())
+                {
+                    ObservTables.Add(new CheckedListItem { Name = dr[0].ToString(), IsChecked = false });
                 }
             }
         }
@@ -111,7 +163,7 @@ namespace NDBackuper
         private void DestinationRemember_Click(object sender, RoutedEventArgs e)
         {
             Properties.Settings.Default.DestinationIsRemember = Destination.IsRemember;
-            if (!Source.IsRemember)
+            if (!Destination.IsRemember)
             {
                 Properties.Settings.Default.DestinationServer = "";
                 Properties.Settings.Default.DestinationUserId = "";
@@ -133,7 +185,26 @@ namespace NDBackuper
             switch (e.Page.Name)
             {
                 case "wzdPage1":
-
+                    if (!Source.IsValidate)
+                    {
+                        int time = 0;
+                        while (!Source.RunValidateConnection() && time < 1)
+                        {
+                            time++;
+                        }
+                        if (!Source.IsValidate)
+                        {
+                            e.Cancel = true;
+                            imgSourceStatus.Visibility = System.Windows.Visibility.Visible;
+                        }
+                        else
+                        {
+                        }
+                    }
+                    else
+                    {
+                        imgSourceStatus.Visibility = System.Windows.Visibility.Hidden;
+                    }
                     break;
                 case "wzdPage2":
                     break;
@@ -154,6 +225,8 @@ namespace NDBackuper
             ConnectionConfig conn = e.Argument as ConnectionConfig;
             conn.RunValidateConnection();
             e.Result = conn;
+            BackgroundWorker bgw = sender as BackgroundWorker;
+            bgw.ReportProgress(100);
         }
         private void bgwValidateConnection_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
@@ -172,6 +245,10 @@ namespace NDBackuper
             {
                 SavePorperties(conn);
             }
+        }
+        private void bgwValidateConnection_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        {
+
         }
         #endregion
     }

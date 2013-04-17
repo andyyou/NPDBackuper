@@ -153,7 +153,7 @@ namespace NDBackuper
 
             return conn;
         }
-        public void RunValidateConnection()
+        public bool RunValidateConnection()
         {
             if (!String.IsNullOrEmpty(this.ConnectionString()))
             {
@@ -163,16 +163,19 @@ namespace NDBackuper
                     {
                         connection.Open();
                         this.IsValidate = true;
+                        return this.IsValidate;
                     }
                     catch (SqlException)
                     {
                         this.IsValidate = false;
+                        return this.IsValidate;
                     }
                 }
             }
             else
             {
                 this.IsValidate = false;
+                return this.IsValidate;
             }
         }
         public event PropertyChangedEventHandler PropertyChanged;
