@@ -12,6 +12,7 @@ namespace NDBackuper
         private int _id;
         private string _name;
         private bool _ischecked;
+        private bool _isenable;
         public int Id
         {
             get
@@ -34,6 +35,15 @@ namespace NDBackuper
             get { return _ischecked; }
             set { _ischecked = value; RaisePropertyChanged("IsChecked"); }
         }
+        public bool IsEnable
+        {
+            get { return _isenable; }
+            set { _isenable = value; RaisePropertyChanged("IsEnable"); }
+        }
+        public CheckedListItem()
+        {
+            this.IsEnable = true;
+        }
         public event PropertyChangedEventHandler PropertyChanged;
         protected virtual void RaisePropertyChanged(String propertyName)
         {
@@ -42,10 +52,5 @@ namespace NDBackuper
                 PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
             }
         }
-    }
-    public struct ConnectionStatus
-    {
-        public bool IsConnected;
-        public string Whois;
     }
 }
