@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -10,17 +11,24 @@ namespace NDBackuper
 {
     public class ConnectionConfig : INotifyPropertyChanged
     {
-        private const string IP_PATTEN = @"([2]([5][0-5]|[0-4][0-9])|[0-1]?[0-9]{1,2})(\.([2]([5][0-5]|[0-4][0-9])|[0-1]?[0-9]{1,2})){3}";
-        private const string URL_PATTEN = @"([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,6}";
+        private const string IP_PATTEN    = @"([2]([5][0-5]|[0-4][0-9])|[0-1]?[0-9]{1,2})(\.([2]([5][0-5]|[0-4][0-9])|[0-1]?[0-9]{1,2})){3}";
+        private const string URL_PATTEN   = @"([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,6}";
         private const string LOCAL_PATTEN = @"([l|L][o|O][c|C][a|A][l|L]|\([l|L][o|O][c|C][a|A][l|L][d|D][b|B]\)\\[\w._\\-]*)";
-        private const string DB_PATTEN = @"^([A-Za-z]*)";
+        private const string DB_PATTEN    = @"^([A-Za-z]*)";
+        private string _name;
         private string _server;
         private string _userid;
         private string _pwd;
         private string _db;
         private bool _loginSecurity;
         private bool _isremember;
+        private bool _isvalidate = false;
 
+        public string Name
+        {
+            get { return _name; }
+            set { _name = value; RaisePropertyChanged("Name"); }
+        }
         public string Server
         {
             get { return _server; }
@@ -80,6 +88,17 @@ namespace NDBackuper
                 RaisePropertyChanged("IsRemember");
             }
         }
+        public bool IsValidate
+        { 
+            get{
+                return _isvalidate;
+            }
+            set
+            {
+                _isvalidate = value;
+                RaisePropertyChanged("IsValidate");
+            }
+        }
         public string Database
         {
             get { return _db; }
@@ -98,7 +117,6 @@ namespace NDBackuper
             this.Server = @"local";
             this.LoginSecurity = true;
         }
-
         public string ConnectionString()
         {
             string conn = "";
@@ -135,9 +153,29 @@ namespace NDBackuper
 
             return conn;
         }
-
+        public void RunValidateConnection()
+        {
+            if (!String.IsNullOrEmpty(this.ConnectionString()))
+            {
+                using (SqlConnection connection = new SqlConnection(this.ConnectionString()))
+                {
+                    try
+                    {
+                        connection.Open();
+                        this.IsValidate = true;
+                    }
+                    catch (SqlException)
+                    {
+                        this.IsValidate = false;
+                    }
+                }
+            }
+            else
+            {
+                this.IsValidate = false;
+            }
+        }
         public event PropertyChangedEventHandler PropertyChanged;
-
         protected virtual void RaisePropertyChanged(String propertyName)
         {
             if ((PropertyChanged != null))

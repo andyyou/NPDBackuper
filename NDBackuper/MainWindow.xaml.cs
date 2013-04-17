@@ -32,23 +32,96 @@ namespace NDBackuper
             InitializeComponent();
             this.Source = new ConnectionConfig();
             this.Destination = new ConnectionConfig();
-            Source.Server = @"(localdb)\v11.0";
-            Source.UserId = "andy";
-            Source.Password = "xx";
-            Source.LoginSecurity = true;
-            Source.IsRemember = true;
+            // Load properties
+            Source.Name = "Source";
+            Source.Server = Properties.Settings.Default.SourceServer;
+            Source.UserId = Properties.Settings.Default.SourceUserId;
+            Source.Password = Properties.Settings.Default.SourcePassword;
+            Source.LoginSecurity = Properties.Settings.Default.SourceLoginSecurity;
+            Source.IsRemember = Properties.Settings.Default.SourceIsRemember;
 
-            Destination.Server = "192.168.100.248";
-            Destination.UserId = "apputu";
-            Destination.Password = "oooo";
-            Destination.LoginSecurity = false;
-            Destination.IsRemember = true;
+            Destination.Name = "Destination";
+            Destination.Server = Properties.Settings.Default.DestinationServer;
+            Destination.UserId = Properties.Settings.Default.DestinationUserId;
+            Destination.Password = Properties.Settings.Default.DestinationPassword;
+            Destination.LoginSecurity = Properties.Settings.Default.DestinationLoginSecurity;
+            Destination.IsRemember = Properties.Settings.Default.DestinationIsRemember;
             
             this.DataContext = this;
 
         }
         #endregion
-        
+
+        #region Controls Events
+        // 驗證 Source Connection
+        protected void btnSourceConnValidation_Click(object sender, RoutedEventArgs e)
+        {
+            BackgroundWorker bgw = new BackgroundWorker();
+            bgw.DoWork += bgwValidateConnection_DoWorkHandler;
+            bgw.RunWorkerCompleted += bgwValidateConnection_RunWorkerCompleted;
+            bgw.WorkerReportsProgress = true;
+            bgw.RunWorkerAsync(Source);
+        }
+        // 驗證 Destination Connection
+        protected void btnDestinationConnValidation_Click(object sender, RoutedEventArgs e)
+        {
+            BackgroundWorker bgw = new BackgroundWorker();
+            bgw.DoWork += bgwValidateConnection_DoWorkHandler;
+            bgw.RunWorkerCompleted += bgwValidateConnection_RunWorkerCompleted;
+            bgw.WorkerReportsProgress = true;
+            bgw.RunWorkerAsync(Destination);
+        }
+        protected void SavePorperties(ConnectionConfig conn)
+        {
+            if (conn.IsValidate)
+            {
+                switch (conn.Name)
+                {
+                    case "Source":
+                        Properties.Settings.Default.SourceServer = Source.Server;
+                        Properties.Settings.Default.SourceUserId = Source.UserId;
+                        Properties.Settings.Default.SourcePassword = Source.Password;
+                        Properties.Settings.Default.SourceLoginSecurity = Source.LoginSecurity;
+                        Properties.Settings.Default.SourceIsRemember = Source.IsRemember;
+                        Properties.Settings.Default.Save();
+                        break;
+                    case "Destination":
+                        Properties.Settings.Default.SourceServer = Source.Server;
+                        Properties.Settings.Default.SourceUserId = Source.UserId;
+                        Properties.Settings.Default.SourcePassword = Source.Password;
+                        Properties.Settings.Default.SourceLoginSecurity = Source.LoginSecurity;
+                        Properties.Settings.Default.SourceIsRemember = Source.IsRemember;
+                        Properties.Settings.Default.Save();
+                        break;
+                }
+            }
+        }
+        private void SourceRemember_Click(object sender, RoutedEventArgs e)
+        {
+            Properties.Settings.Default.SourceIsRemember = Source.IsRemember;
+            if (!Source.IsRemember)
+            {
+                Properties.Settings.Default.SourceServer = "";
+                Properties.Settings.Default.SourceUserId = "";
+                Properties.Settings.Default.SourcePassword = "";
+                Properties.Settings.Default.SourceLoginSecurity = false;
+            }
+            Properties.Settings.Default.Save();
+        }
+        private void DestinationRemember_Click(object sender, RoutedEventArgs e)
+        {
+            Properties.Settings.Default.DestinationIsRemember = Destination.IsRemember;
+            if (!Source.IsRemember)
+            {
+                Properties.Settings.Default.DestinationServer = "";
+                Properties.Settings.Default.DestinationUserId = "";
+                Properties.Settings.Default.DestinationPassword = "";
+                Properties.Settings.Default.DestinationLoginSecurity = false;
+            }
+            Properties.Settings.Default.Save();
+        }
+        #endregion
+
         #region Wizard Events
         // Close
         private void wzdMain_Cancelled(object sender, RoutedEventArgs e)
@@ -57,9 +130,49 @@ namespace NDBackuper
         }
         private void Wizard_Commit(object sender, AvalonWizard.WizardPageConfirmEventArgs e)
         {
+            switch (e.Page.Name)
+            {
+                case "wzdPage1":
 
+                    break;
+                case "wzdPage2":
+                    break;
+                case "wzdPage3":
+                    break;
+                case "wzdPage4":
+                    break;
+                case "wzdPage5":
+                    break;
+            }
         }
 
+        #endregion
+
+        #region Threads
+        public void bgwValidateConnection_DoWorkHandler(object sender, DoWorkEventArgs e)
+        {
+            ConnectionConfig conn = e.Argument as ConnectionConfig;
+            conn.RunValidateConnection();
+            e.Result = conn;
+        }
+        private void bgwValidateConnection_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            ConnectionConfig conn = e.Result as ConnectionConfig;
+            switch (conn.Name)
+            { 
+                case "Source":
+                    imgSourceStatus.Visibility = System.Windows.Visibility.Visible;
+                    break;
+                case "Destination":
+                    imgDestinationStatus.Visibility = System.Windows.Visibility.Visible;
+                    break;
+            }
+
+            if (conn.IsRemember)
+            {
+                SavePorperties(conn);
+            }
+        }
         #endregion
     }
 }
