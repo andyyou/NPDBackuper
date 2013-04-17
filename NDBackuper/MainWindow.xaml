@@ -236,24 +236,29 @@
                     <CheckBox x:Name="chkUseDateRange" 
                               Content="Specify Date Range"
                               Margin="35 5 50 5" 
+                              Click="chkUseDateRange_Click" 
                               />
                     <Label x:Name="lbFromTag" 
                            Content="From" 
                            Margin="35 5 50 5" 
                            FontSize="14" 
                            FontWeight="Bold" 
+                           Visibility="Collapsed"
                            />
                     <DatePicker x:Name="dpFrom" 
                                 Margin="35 5 50 5" 
+                                Visibility="Collapsed"
                                 />
                     <Label x:Name="lbTo" 
                            Content="To" 
                            Margin="35 5 50 5" 
                            FontSize="14" 
                            FontWeight="Bold" 
+                           Visibility="Collapsed"
                            />
                     <DatePicker x:Name="dpTo" 
                                 Margin="35 5 50 5" 
+                                Visibility="Collapsed"
                                 />
                 </StackPanel>
             </aw:WizardPage>
