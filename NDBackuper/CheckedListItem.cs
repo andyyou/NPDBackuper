@@ -13,6 +13,7 @@ namespace NDBackuper
         private string _name;
         private bool _ischecked;
         private bool _isenable;
+        private bool _isoverride;
         public int Id
         {
             get
@@ -39,6 +40,11 @@ namespace NDBackuper
         {
             get { return _isenable; }
             set { _isenable = value; RaisePropertyChanged("IsEnable"); }
+        }
+        public bool IsOverride
+        {
+            get { return _isoverride; }
+            set { _isoverride = value; RaisePropertyChanged("IsOverride"); }
         }
         public CheckedListItem()
         {
