@@ -51,6 +51,7 @@ namespace NDBackuper
 
         }
         #endregion
+
         #region Controls Events
         // 驗證 Source Connection
         protected void btnSourceConnValidation_Click(object sender, RoutedEventArgs e)
@@ -95,7 +96,30 @@ namespace NDBackuper
                 }
             }
         }
-
+        private void SourceRemember_Click(object sender, RoutedEventArgs e)
+        {
+            Properties.Settings.Default.SourceIsRemember = Source.IsRemember;
+            if (!Source.IsRemember)
+            {
+                Properties.Settings.Default.SourceServer = "";
+                Properties.Settings.Default.SourceUserId = "";
+                Properties.Settings.Default.SourcePassword = "";
+                Properties.Settings.Default.SourceLoginSecurity = false;
+            }
+            Properties.Settings.Default.Save();
+        }
+        private void DestinationRemember_Click(object sender, RoutedEventArgs e)
+        {
+            Properties.Settings.Default.DestinationIsRemember = Destination.IsRemember;
+            if (!Source.IsRemember)
+            {
+                Properties.Settings.Default.DestinationServer = "";
+                Properties.Settings.Default.DestinationUserId = "";
+                Properties.Settings.Default.DestinationPassword = "";
+                Properties.Settings.Default.DestinationLoginSecurity = false;
+            }
+            Properties.Settings.Default.Save();
+        }
         #endregion
 
         #region Wizard Events
@@ -143,7 +167,11 @@ namespace NDBackuper
                     imgDestinationStatus.Visibility = System.Windows.Visibility.Visible;
                     break;
             }
-            SavePorperties(conn);
+
+            if (conn.IsRemember)
+            {
+                SavePorperties(conn);
+            }
         }
         #endregion
     }
