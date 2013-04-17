@@ -244,15 +244,24 @@ namespace NDBackuper
                 cmd.CommandText = "SELECT name FROM sys.tables WHERE is_ms_shipped = 0";
                 SqlDataReader dr = cmd.ExecuteReader();
                 ObservTables.Clear();
+
+                List<string> necessaryTable = new List<string>();
+                necessaryTable.Add("MCS");
+                necessaryTable.Add("MCSProperty");
+                necessaryTable.Add("Jobs");
+                necessaryTable.Add("WebDBVersion");
+
                 while (dr.Read())
                 {
                     bool isChecked = false;
-                    if (dr[0].ToString() == "MCS" || dr[0].ToString() == "Jobs")
+                    bool isEnable = true;
+                    if (necessaryTable.Contains(dr[0].ToString()))
                     {
                         isChecked = true;
+                        isEnable = false;
                     }
 
-                    ObservTables.Add(new CheckedListItem { Name = dr[0].ToString(), IsChecked = isChecked });
+                    ObservTables.Add(new CheckedListItem { Name = dr[0].ToString(), IsChecked = isChecked, IsEnable = isEnable });
                 }
             }
         }
