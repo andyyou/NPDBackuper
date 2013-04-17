@@ -112,6 +112,8 @@
                     <ComboBox x:Name="cmbSourceDatabases" 
                               Height="26"
                               Margin="35 5 50 5" 
+                              ItemsSource="{Binding Path=SourceDatabases}"
+                              SelectedIndex="0"
                               />
                     <Label x:Name="lbSourceTablesTag" 
                            Content="Tables" 

@@ -25,6 +25,7 @@ namespace NDBackuper
     {
         public ConnectionConfig Source { get; set; }
         public ConnectionConfig Destination { get; set; }
+        public List<string> SourceDatabases { get; set; }
         public ObservableCollection<CheckedListItem> ObservTables = new ObservableCollection<CheckedListItem>();
 
         #region Constructor
@@ -33,6 +34,7 @@ namespace NDBackuper
             InitializeComponent();
             this.Source = new ConnectionConfig();
             this.Destination = new ConnectionConfig();
+            this.SourceDatabases = new List<string>();
             // Load properties
             Source.Name = "Source";
             Source.Server = Properties.Settings.Default.SourceServer;
@@ -100,7 +102,6 @@ namespace NDBackuper
         private List<string> LoadDatabases(string connstring)
         {
             List<string> databases = new List<string>();
-            databases.Add("--- Please Select ---");
             using (SqlConnection conn = new System.Data.SqlClient.SqlConnection(connstring))
             {
                 try
@@ -199,11 +200,13 @@ namespace NDBackuper
                         }
                         else
                         {
+                            SourceDatabases = LoadDatabases(Source.ConnectionString());
                         }
                     }
                     else
                     {
                         imgSourceStatus.Visibility = System.Windows.Visibility.Hidden;
+                        SourceDatabases = LoadDatabases(Source.ConnectionString());
                     }
                     break;
                 case "wzdPage2":
@@ -225,8 +228,8 @@ namespace NDBackuper
             ConnectionConfig conn = e.Argument as ConnectionConfig;
             conn.RunValidateConnection();
             e.Result = conn;
-            BackgroundWorker bgw = sender as BackgroundWorker;
-            bgw.ReportProgress(100);
+            // BackgroundWorker bgw = sender as BackgroundWorker;
+            // bgw.ReportProgress(100);
         }
         private void bgwValidateConnection_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
@@ -248,7 +251,6 @@ namespace NDBackuper
         }
         private void bgwValidateConnection_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
-
         }
         #endregion
     }
