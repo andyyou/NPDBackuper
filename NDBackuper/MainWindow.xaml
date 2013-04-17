@@ -13,6 +13,7 @@
     <Grid x:Name="gridMain">
         <Grid.Resources>
             <cv:BooleanToHiddenVisibility x:Key="boolToVisibility"/>
+            <cv:BooleanToImagePath x:Key="boolToImageSource"/>
         </Grid.Resources>
         <aw:Wizard x:Name="wzdMain" aw:Designer.PageIndex="1" Cancelled="wzdMain_Cancelled">
 
@@ -78,9 +79,9 @@
                                Height="30" 
                                Margin="145,5,0,0" 
                                VerticalAlignment="Top" 
-                               Source="Images/error.png" 
+                               Source="{Binding Path=Source.IsValidate, Converter={StaticResource boolToImageSource}}"
                                RenderTransformOrigin="-0.257,0.433" 
-                               
+                               Visibility="Hidden"
                                />
                         <Button x:Name="btnSourceConnValidation" 
                                 Content="Validate Connection" 
@@ -188,9 +189,9 @@
                                Height="30" 
                                Margin="145,5,0,0" 
                                VerticalAlignment="Top" 
-                               Source="Images/error.png" 
+                               Source="{Binding Path=Destination.IsValidate, Converter={StaticResource boolToImageSource}}"
                                RenderTransformOrigin="-0.257,0.433" 
-                               
+                               Visibility="Hidden"
                                />
                         <Button x:Name="btnDestinationConnValidation" 
                                 Content="Validate Connection" 

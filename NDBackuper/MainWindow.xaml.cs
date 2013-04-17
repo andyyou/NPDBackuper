@@ -33,12 +33,14 @@ namespace NDBackuper
             this.Source = new ConnectionConfig();
             this.Destination = new ConnectionConfig();
             // Load properties
+            Source.Name = "Source";
             Source.Server = Properties.Settings.Default.SourceServer;
             Source.UserId = Properties.Settings.Default.SourceUserId;
             Source.Password = Properties.Settings.Default.SourcePassword;
             Source.LoginSecurity = Properties.Settings.Default.SourceLoginSecurity;
             Source.IsRemember = Properties.Settings.Default.SourceIsRemember;
 
+            Destination.Name = "Destination";
             Destination.Server = Properties.Settings.Default.DestinationServer;
             Destination.UserId = Properties.Settings.Default.DestinationUserId;
             Destination.Password = Properties.Settings.Default.DestinationPassword;
@@ -96,11 +98,21 @@ namespace NDBackuper
         public void bgwValidateConnection_DoWorkHandler(object sender, DoWorkEventArgs e)
         {
             ConnectionConfig conn = e.Argument as ConnectionConfig;
-            e.Result = conn.ValidateConnection();
+            conn.RunValidateConnection();
+            e.Result = conn;
         }
         private void bgwValidateConnection_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            
+            ConnectionConfig conn = e.Result as ConnectionConfig;
+            switch (conn.Name)
+            { 
+                case "Source":
+                    imgSourceStatus.Visibility = System.Windows.Visibility.Visible;
+                    break;
+                case "Destination":
+                    imgDestinationStatus.Visibility = System.Windows.Visibility.Visible;
+                    break;
+            }
         }
         #endregion
     }

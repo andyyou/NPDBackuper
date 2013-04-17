@@ -15,13 +15,20 @@ namespace NDBackuper
         private const string URL_PATTEN = @"([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,6}";
         private const string LOCAL_PATTEN = @"([l|L][o|O][c|C][a|A][l|L]|\([l|L][o|O][c|C][a|A][l|L][d|D][b|B]\)\\[\w._\\-]*)";
         private const string DB_PATTEN = @"^([A-Za-z]*)";
+        private string _name;
         private string _server;
         private string _userid;
         private string _pwd;
         private string _db;
         private bool _loginSecurity;
         private bool _isremember;
+        private bool _isvalidate = false;
 
+        public string Name
+        {
+            get { return _name; }
+            set { _name = value; RaisePropertyChanged("Name"); }
+        }
         public string Server
         {
             get { return _server; }
@@ -81,6 +88,18 @@ namespace NDBackuper
                 RaisePropertyChanged("IsRemember");
             }
         }
+
+        public bool IsValidate
+        { 
+            get{
+                return _isvalidate;
+            }
+            set
+            {
+                _isvalidate = value;
+                RaisePropertyChanged("IsValidate");
+            }
+        }
         public string Database
         {
             get { return _db; }
@@ -137,7 +156,7 @@ namespace NDBackuper
             return conn;
         }
 
-        public bool ValidateConnection()
+        public void RunValidateConnection()
         {
             if (!String.IsNullOrEmpty(this.ConnectionString()))
             {
@@ -146,17 +165,17 @@ namespace NDBackuper
                     try
                     {
                         connection.Open();
-                        return true;
+                        this.IsValidate = true;
                     }
                     catch (SqlException)
                     {
-                        return false;
+                        this.IsValidate = false;
                     }
                 }
             }
             else
             {
-                return false;
+                this.IsValidate = false;
             }
         }
 
