@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -135,33 +136,30 @@ namespace NDBackuper
 
             return conn;
         }
+
         public bool ValidateConnection()
         {
             if (!String.IsNullOrEmpty(this.ConnectionString()))
             {
-                BackgroundWorker bgw = new BackgroundWorker();
-                bgw.DoWork += bgwValidateConnection_DoWorkHandler;
-                bgw.RunWorkerCompleted += bgwValidateConnection_RunWorkerCompleted;
-                bgw.WorkerReportsProgress = true;
-                bgw.RunWorkerAsync(this.ConnectionString());
+                using (SqlConnection connection = new SqlConnection(this.ConnectionString()))
+                {
+                    try
+                    {
+                        connection.Open();
+                        return true;
+                    }
+                    catch (SqlException)
+                    {
+                        return false;
+                    }
+                }
             }
             else
             {
                 return false;
             }
-            return false;
         }
 
-        #region Threads
-        public void bgwValidateConnection_DoWorkHandler(object sender, DoWorkEventArgs e)
-        {
-            
-        }
-        private void bgwValidateConnection_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        {
-           
-        }
-        #endregion
 
         public event PropertyChangedEventHandler PropertyChanged;
 

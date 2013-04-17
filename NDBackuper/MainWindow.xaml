@@ -85,6 +85,7 @@
                         <Button x:Name="btnSourceConnValidation" 
                                 Content="Validate Connection" 
                                 Margin="0,0,335,0" 
+                                Click="btnSourceConnValidation_Click"
                                 Height="30" />
 
                         <CheckBox x:Name="chkSourceRemember" 
@@ -194,6 +195,7 @@
                         <Button x:Name="btnDestinationConnValidation" 
                                 Content="Validate Connection" 
                                 Margin="0,0,335,0" 
+                                Click="btnDestinationConnValidation_Click"
                                 Height="30" />
 
                         <CheckBox x:Name="chkDestinationRemember" 

@@ -49,7 +49,23 @@ namespace NDBackuper
 
         }
         #endregion
-        
+        #region Controls Events
+        // 驗證 Source Connection
+        protected void btnSourceConnValidation_Click(object sender, RoutedEventArgs e)
+        {
+            BackgroundWorker bgw = new BackgroundWorker();
+            bgw.DoWork += bgwValidateConnection_DoWorkHandler;
+            bgw.RunWorkerCompleted += bgwValidateConnection_RunWorkerCompleted;
+            bgw.WorkerReportsProgress = true;
+            bgw.RunWorkerAsync(Source);
+        }
+        // 驗證 Destination Connection
+        protected void btnDestinationConnValidation_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+        #endregion
+
         #region Wizard Events
         // Close
         private void wzdMain_Cancelled(object sender, RoutedEventArgs e)
@@ -74,6 +90,18 @@ namespace NDBackuper
             }
         }
 
+        #endregion
+
+        #region Threads
+        public void bgwValidateConnection_DoWorkHandler(object sender, DoWorkEventArgs e)
+        {
+            ConnectionConfig conn = e.Argument as ConnectionConfig;
+            e.Result = conn.ValidateConnection();
+        }
+        private void bgwValidateConnection_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            
+        }
         #endregion
     }
 }
