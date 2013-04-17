@@ -251,17 +251,35 @@ namespace NDBackuper
                 necessaryTable.Add("Jobs");
                 necessaryTable.Add("WebDBVersion");
 
+                List<string> overrideTable = new List<string>();
+                overrideTable.Add("WebDBVersion");
+                overrideTable.Add("UserSlitParams");
+                overrideTable.Add("UserTerms");
+                overrideTable.Add("UserROIParams");
+                overrideTable.Add("UserValues");
+                overrideTable.Add("UserJobParams");
+
                 while (dr.Read())
                 {
                     bool isChecked = false;
                     bool isEnable = true;
+                    bool isOverride = false;
                     if (necessaryTable.Contains(dr[0].ToString()))
                     {
                         isChecked = true;
                         isEnable = false;
                     }
+                    if (overrideTable.Contains(dr[0].ToString()))
+                    {
+                        isOverride = true;
+                    }
 
-                    ObservTables.Add(new CheckedListItem { Name = dr[0].ToString(), IsChecked = isChecked, IsEnable = isEnable });
+                    ObservTables.Add(new CheckedListItem { 
+                        Name = dr[0].ToString(), 
+                        IsChecked = isChecked, 
+                        IsEnable = isEnable,
+                        IsOverride = isOverride
+                    });
                 }
             }
         }
