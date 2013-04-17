@@ -106,6 +106,7 @@ namespace NDBackuper
         // 驗證 Destination Connection
         protected void btnDestinationConnValidation_Click(object sender, RoutedEventArgs e)
         {
+            Destination.Database = "";
             BackgroundWorker bgw = new BackgroundWorker();
             bgw.DoWork += bgwValidateConnection_DoWorkHandler;
             bgw.RunWorkerCompleted += bgwValidateConnection_RunWorkerCompleted;
@@ -127,7 +128,23 @@ namespace NDBackuper
         #endregion
 
         #region Page-4
-        
+        private void chkUseDateRange_Click(object sender, RoutedEventArgs e)
+        {
+            if ((bool)chkUseDateRange.IsChecked)
+            {
+                lbFromTag.Visibility = System.Windows.Visibility.Visible;
+                dpFrom.Visibility = System.Windows.Visibility.Visible;
+                lbTo.Visibility = System.Windows.Visibility.Visible;
+                dpTo.Visibility = System.Windows.Visibility.Visible;
+            }
+            else
+            {
+                lbFromTag.Visibility = System.Windows.Visibility.Collapsed;
+                dpFrom.Visibility = System.Windows.Visibility.Collapsed;
+                lbTo.Visibility = System.Windows.Visibility.Collapsed;
+                dpTo.Visibility = System.Windows.Visibility.Collapsed;
+            }
+        }
         #endregion
 
         #region Page-5
@@ -184,6 +201,7 @@ namespace NDBackuper
                             SavePorperties(Destination);
                         }
                         txtDestinationDatabaseName.Text = Source.Database;
+
                     }
                     break;
                 case "wzdPage4":
