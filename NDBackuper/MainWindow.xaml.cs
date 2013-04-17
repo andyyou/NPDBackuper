@@ -61,6 +61,7 @@ namespace NDBackuper
         // 驗證 Source Connection
         protected void btnSourceConnValidation_Click(object sender, RoutedEventArgs e)
         {
+            Source.Database = "";
             BackgroundWorker bgw = new BackgroundWorker();
             bgw.DoWork += bgwValidateConnection_DoWorkHandler;
             bgw.RunWorkerCompleted += bgwValidateConnection_RunWorkerCompleted;
@@ -144,27 +145,16 @@ namespace NDBackuper
             switch (e.Page.Name)
             {
                 case "wzdPage1":
+                    Source.Database = "";
+                    Source.RunValidateConnection();
                     if (!Source.IsValidate)
                     {
-                        int time = 0;
-                        while (!Source.RunValidateConnection() && time < 1)
-                        {
-                            time++;
-                        }
-                        if (!Source.IsValidate)
-                        {
-                            e.Cancel = true;
-                            imgSourceStatus.Visibility = System.Windows.Visibility.Visible;
-                        }
-                        else
-                        {
-                            SourceDatabases = LoadDatabases(Source.ConnectionString());
-                            cmbSourceDatabases.SelectedIndex = 0;
-                        }
+                        e.Cancel = true;
                     }
                     else
                     {
                         imgSourceStatus.Visibility = System.Windows.Visibility.Hidden;
+                        SavePorperties(Source);
                         SourceDatabases = LoadDatabases(Source.ConnectionString());
                         cmbSourceDatabases.SelectedIndex = 0;
                     }
@@ -254,9 +244,24 @@ namespace NDBackuper
                 cmd.CommandText = "SELECT name FROM sys.tables WHERE is_ms_shipped = 0";
                 SqlDataReader dr = cmd.ExecuteReader();
                 ObservTables.Clear();
+
+                List<string> necessaryTable = new List<string>();
+                necessaryTable.Add("MCS");
+                necessaryTable.Add("MCSProperty");
+                necessaryTable.Add("Jobs");
+                necessaryTable.Add("WebDBVersion");
+
                 while (dr.Read())
                 {
-                    ObservTables.Add(new CheckedListItem { Name = dr[0].ToString(), IsChecked = false });
+                    bool isChecked = false;
+                    bool isEnable = true;
+                    if (necessaryTable.Contains(dr[0].ToString()))
+                    {
+                        isChecked = true;
+                        isEnable = false;
+                    }
+
+                    ObservTables.Add(new CheckedListItem { Name = dr[0].ToString(), IsChecked = isChecked, IsEnable = isEnable });
                 }
             }
         }
