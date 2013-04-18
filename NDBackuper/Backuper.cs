@@ -75,13 +75,29 @@ namespace NDBackuper
 
         }
         
-        public bool CheckVersion()
+        /// <summary>
+        /// 檢查來源及目的資料庫版本
+        /// </summary>
+        /// <returns>來源大於目的：1、來源等於目的：0、來源小於目的：-1</returns>
+        public int CheckVersion()
         {
-            var x = DbHelper.ReadOne(Source.ConnectionString(),
-                             "Select TOP 1 * From WebDBVersion Order By klKey DESC");
-            var y = DbHelper.ReadOne(Destination.ConnectionString(),
-                             "Select TOP 1 * From WebDBVersion Order By klKey DESC");
-            return false;
+            int sourceVer = (int)(DbHelper.ReadOne(Source.ConnectionString(),
+                             "Select TOP 1 VersionNum From WebDBVersion Order By klKey DESC"));
+            int destinationVer = (int)(DbHelper.ReadOne(Destination.ConnectionString(),
+                             "Select TOP 1 VersionNum From WebDBVersion Order By klKey DESC"));
+
+            if (sourceVer - destinationVer > 0)
+            {
+                return 1;
+            }
+            else if (sourceVer == destinationVer)
+            {
+                return 0;
+            }
+            else
+            {
+                return -1;
+            }
         }
         #endregion
 
