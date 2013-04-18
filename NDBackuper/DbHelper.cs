@@ -6,6 +6,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Transactions;
+using Microsoft.SqlServer.Management.Common;
+using Microsoft.SqlServer.Management.Smo;
 
 namespace NDBackuper
 {
@@ -59,6 +61,30 @@ namespace NDBackuper
                         throw e;
                     }
                 }
+            }
+        }
+        public static bool ExcuteScript(string cn, string scriptPath)
+        {
+            try
+            {
+                System.IO.FileInfo file = new System.IO.FileInfo(scriptPath);
+                string script = file.OpenText().ReadToEnd();
+
+                using (SqlConnection conn = new SqlConnection(cn))
+                {
+                    using (SqlCommand cmd = new SqlCommand())
+                    {
+                        Server server = new Server(new ServerConnection(conn));
+                        server.ConnectionContext.ExecuteNonQuery(script);
+                    }
+                }
+                file.OpenText().Close();
+                
+                return true;
+            }
+            catch (Exception e)
+            {
+                return false;
             }
         }
         public static void ExecuteSqlBulk(string conn, DataTable dt)

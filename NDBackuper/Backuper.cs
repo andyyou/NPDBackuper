@@ -101,6 +101,7 @@ namespace NDBackuper
             // TODO: 2-1. If use date range, DataTable.Select(); filter Jobs key (klKey) and filter another table has FK by Jobs (fkJobKey, klJobKey)
             // TODO: 2-2. Use Sqlbulk copy datatable
             // TODO: 3.   If YES  Check db version
+            CheckVersion();
             // TODO: 3-1. Source > Destination => upgrade scripts
             // TODO: 3-2. Source == Destination => Run step 4 for merge data.
             // TODO: 3-3. Source < Destination => false; alert message and block;
@@ -154,15 +155,21 @@ namespace NDBackuper
                 if (registry.GetValueNames().Contains("INSTALLDIR"))
                 {
                     string dbUtilityDir = registry.GetValue("INSTALLDIR").ToString() + @"\Database Utility\";
-                    List<string> upgradeCommand = new List<string>();
+                    List<string> cmdPathList = new List<string>();
 
                     while (sourceVer <= destinationVer)
                     {
-                        upgradeCommand.AddRange(System.IO.Directory.GetFiles(dbUtilityDir)
-                            .Select(f => System.IO.Path.GetFileName(f))
-                            .Where(f => f.StartsWith(string.Format("Upgrade_{0}", sourceVer)))
+                        cmdPathList.AddRange(System.IO.Directory.GetFiles(dbUtilityDir)
+                            .Where(f => f.Contains(string.Format("Upgrade_{0}", sourceVer)))
                             .ToList());
                         sourceVer++;
+                    }
+
+                    StringBuilder upgradeCommand = new StringBuilder();
+
+                    foreach (string path in cmdPathList)
+                    {
+
                     }
                 }
             }
