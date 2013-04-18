@@ -150,6 +150,7 @@ namespace NDBackuper
         #region Page-5
         
         #endregion
+        #endregion
 
         #region Wizard Events
         // Close
@@ -176,6 +177,7 @@ namespace NDBackuper
                             SavePorperties(Source);
                         }
                         SourceDatabases = LoadDatabases(Source.ConnectionString());
+                        cmbSourceDatabases.ItemsSource = SourceDatabases;
                         cmbSourceDatabases.SelectedIndex = 0;
                     }
                     break;
@@ -205,13 +207,29 @@ namespace NDBackuper
                     }
                     break;
                 case "wzdPage4":
+                    if (String.IsNullOrEmpty(txtDestinationDatabaseName.Text))
+                    {
+                        MessageBox.Show("Please input database name for backup");
+                        e.Cancel = true;
+                    }
+                    else
+                    {
+                        Destination.Database = txtDestinationDatabaseName.Text;
+                    }
+                    if ((bool)chkUseDateRange.IsChecked)
+                    {
+                        if (dpFrom.SelectedDate == null || dpTo.SelectedDate == null)
+                        {
+                            MessageBox.Show("Please select date range");
+                            e.Cancel = true;
+                        }
+                    }
                     break;
                 case "wzdPage5":
                     break;
             }
         }
 
-        #endregion
         #endregion
 
         #region DRY
