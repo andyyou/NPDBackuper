@@ -153,6 +153,7 @@ namespace NDBackuper
         {
             List<string> backupTables = ObservTables.Where(o => o.IsChecked == true).Select(o => o.Name).ToList();
             BackupObject.RunBackup(backupTables);
+            MessageBox.Show("Done");
         }
         #endregion
         #endregion

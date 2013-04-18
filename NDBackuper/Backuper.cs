@@ -75,10 +75,10 @@ namespace NDBackuper
                 Smo.Database dbSource                     = srvSource.Databases[Source.Database];
                 Smo.Transfer transfer                     = new Smo.Transfer(dbSource);
                 transfer.CopyAllUsers                     = true;
-                transfer.CopyAllObjects                   = true;
+                transfer.CopyAllObjects                   = false;
+                transfer.CopyAllTables                    = false;
                 transfer.CopyData                         = true;
                 transfer.CopySchema                       = true;
-                transfer.CopyAllTables                    = false;
                 transfer.Options.WithDependencies         = true;
                 transfer.Options.DriAll                   = true;
                 transfer.Options.ContinueScriptingOnError = false;
