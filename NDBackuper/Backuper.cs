@@ -53,7 +53,7 @@ namespace NDBackuper
             bgw.ProgressChanged += bgwValidateConnection_ProgressChanged;
             bgw.WorkerReportsProgress = true;
         }
-        protected bool CheckVersion()
+        public bool CheckVersion()
         {
             var x = DbHelper.ReadOne(Source.ConnectionString(),
                              "Select TOP 1 * From WebDBVersion Order By klKey DESC");

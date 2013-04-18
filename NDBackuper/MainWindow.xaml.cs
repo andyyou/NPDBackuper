@@ -26,6 +26,7 @@ namespace NDBackuper
         public ConnectionConfig Source { get; set; }
         public ConnectionConfig Destination { get; set; }
         public List<string> SourceDatabases { get; set; }
+        public Backuper BackupObject { get; set; }
         public ObservableCollection<CheckedListItem> ObservTables { get; set; }
 
         #region Constructor
@@ -36,6 +37,8 @@ namespace NDBackuper
             this.Destination = new ConnectionConfig();
             this.SourceDatabases = new List<string>();
             this.ObservTables = new ObservableCollection<CheckedListItem>();
+            this.BackupObject = new Backuper(Source, Destination);
+
             // Load properties
             Source.Name = "Source";
             Source.Server = Properties.Settings.Default.SourceServer;
@@ -81,8 +84,6 @@ namespace NDBackuper
             Properties.Settings.Default.Save();
         }
         #endregion
-
-       
        
         #region Page-2
         // P2-1: Combobox Select Event
@@ -148,7 +149,10 @@ namespace NDBackuper
         #endregion
 
         #region Page-5
-        
+        protected void btnRunBackup_Click(object sender, RoutedEventArgs e)
+        {
+            BackupObject.CheckVersion();
+        }
         #endregion
         #endregion
 
