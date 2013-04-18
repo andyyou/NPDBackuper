@@ -69,15 +69,16 @@ namespace NDBackuper
             Smo.Server srvDestination = new Smo.Server(Destination.ServerConnection);
             if (!srvDestination.Databases.Contains(Destination.Database))
             {
+                Smo.Database newdb = new Smo.Database(srvDestination, Destination.Database);
+                newdb.Create();
                 Smo.Server srvSource                      = new Smo.Server(Source.ServerConnection);
                 Smo.Database dbSource                     = srvSource.Databases[Source.Database];
                 Smo.Transfer transfer                     = new Smo.Transfer(dbSource);
                 transfer.CopyAllUsers                     = true;
-                transfer.CreateTargetDatabase             = false;
-                transfer.CopyAllObjects                   = false;
-                transfer.CopyAllTables                    = false;
+                transfer.CopyAllObjects                   = true;
                 transfer.CopyData                         = true;
-                // transfer.CopySchema                    = true;
+                transfer.CopySchema                       = true;
+                transfer.CopyAllTables                    = false;
                 transfer.Options.WithDependencies         = true;
                 transfer.Options.DriAll                   = true;
                 transfer.Options.ContinueScriptingOnError = false;
@@ -85,14 +86,14 @@ namespace NDBackuper
                 {
                     transfer.ObjectList.Add(dbSource.Tables[tbname]);
                 }
-                transfer.CreateTargetDatabase   = true;
-                transfer.DestinationLoginSecure = Destination.LoginSecurity;
                 transfer.DestinationServer      = Destination.Server;
-                transfer.DestinationLogin       = Destination.UserId;
-                transfer.DestinationPassword    = Destination.Password;
-                transfer.DestinationDatabase    = Destination.Database;
-
-                transfer.ScriptTransfer();
+                transfer.DestinationDatabase    = newdb.Name;
+                transfer.DestinationLoginSecure = Destination.LoginSecurity;
+                if (!Destination.LoginSecurity)
+                {
+                    transfer.DestinationLogin = Destination.UserId;
+                    transfer.DestinationPassword = Destination.Password;
+                }
                 transfer.TransferData();
             }
 
