@@ -152,6 +152,7 @@ namespace NDBackuper
         protected void btnRunBackup_Click(object sender, RoutedEventArgs e)
         {
             List<string> backupTables = ObservTables.Where(o => o.IsChecked == true).Select(o => o.Name).ToList();
+            BackupObject.IsDateFiltration = true;
             BackupObject.RunBackup(backupTables);
             MessageBox.Show("Done");
         }
