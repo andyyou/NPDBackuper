@@ -126,6 +126,12 @@ namespace NDBackuper
             string msg = string.Format("Copied {0} records from {1}", e.RowsCopied, table);
             SqlBulkLog.Add(msg);
         }
+        public static DataSet CopyDatabase(string conn)
+        {
+            DataSet ds = new DataSet();
+
+            return ds;
+        }
 
         private static void PrepareCommand(SqlCommand cmd, SqlConnection conn, SqlTransaction trans, string sql, SqlParameter[] parms)
         {

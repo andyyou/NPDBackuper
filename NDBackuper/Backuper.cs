@@ -65,39 +65,80 @@ namespace NDBackuper
             bgw.WorkerReportsProgress = true;
 
             // TODO: Backup Here
-            // DONE: 1.   Check destination database exsits.
+           
             Smo.Server srvDestination = new Smo.Server(Destination.ServerConnection);
+           
             if (!srvDestination.Databases.Contains(Destination.Database))
             {
-                Smo.Database newdb = new Smo.Database(srvDestination, Destination.Database);
-                newdb.Create();
-                Smo.Server srvSource                      = new Smo.Server(Source.ServerConnection);
-                Smo.Database dbSource                     = srvSource.Databases[Source.Database];
-                Smo.Transfer transfer                     = new Smo.Transfer(dbSource);
-                transfer.CopyAllUsers                     = true;
-                transfer.CopyAllObjects                   = false;
-                transfer.CopyAllTables                    = false;
-                transfer.CopyData                         = true;
-                transfer.CopySchema                       = true;
-                transfer.Options.WithDependencies         = true;
-                transfer.Options.DriAll                   = true;
-                transfer.Options.ContinueScriptingOnError = false;
-                foreach (string tbname in backupTables)
+                if (!IsDateFiltration)
                 {
-                    transfer.ObjectList.Add(dbSource.Tables[tbname]);
+                    #region Copy All Database and Table to another Server
+                    Smo.Database newdb = new Smo.Database(srvDestination, Destination.Database);
+                    newdb.Create();
+                    Smo.Server srvSource = new Smo.Server(Source.ServerConnection);
+                    Smo.Database dbSource = srvSource.Databases[Source.Database];
+                    Smo.Transfer transfer = new Smo.Transfer(dbSource);
+                    transfer.CopyAllUsers = true;
+                    transfer.CopyAllObjects = false;
+                    transfer.CopyAllTables = false;
+                    transfer.CopyData = true;
+                    transfer.CopySchema = true;
+                    transfer.Options.WithDependencies = true;
+                    transfer.Options.DriAll = true;
+                    transfer.Options.ContinueScriptingOnError = false;
+                    foreach (string tbname in backupTables)
+                    {
+                        transfer.ObjectList.Add(dbSource.Tables[tbname]);
+                    }
+                    transfer.DestinationServer = Destination.Server;
+                    transfer.DestinationDatabase = newdb.Name;
+                    transfer.DestinationLoginSecure = Destination.LoginSecurity;
+                    if (!Destination.LoginSecurity)
+                    {
+                        transfer.DestinationLogin = Destination.UserId;
+                        transfer.DestinationPassword = Destination.Password;
+                    }
+                    transfer.TransferData();
+                    #endregion
                 }
-                transfer.DestinationServer      = Destination.Server;
-                transfer.DestinationDatabase    = newdb.Name;
-                transfer.DestinationLoginSecure = Destination.LoginSecurity;
-                if (!Destination.LoginSecurity)
+                else
                 {
-                    transfer.DestinationLogin = Destination.UserId;
-                    transfer.DestinationPassword = Destination.Password;
-                }
-                transfer.TransferData();
-            }
+                    #region Create Database and Copy Table sechma
+                    Smo.Database newdb = new Smo.Database(srvDestination, Destination.Database);
+                    newdb.Create();
+                    Smo.Server srvSource = new Smo.Server(Source.ServerConnection);
+                    Smo.Database dbSource = srvSource.Databases[Source.Database];
+                    Smo.Transfer transfer = new Smo.Transfer(dbSource);
+                    transfer.CopyAllUsers = true;
+                    transfer.CopyAllObjects = false;
+                    transfer.CopyAllTables = false;
+                    transfer.CopyData = false;
+                    transfer.CopySchema = true;
+                    transfer.Options.WithDependencies = true;
+                    transfer.Options.DriAll = true;
+                    transfer.Options.ContinueScriptingOnError = false;
+                    foreach (string tbname in backupTables)
+                    {
+                        transfer.ObjectList.Add(dbSource.Tables[tbname]);
+                    }
+                    transfer.DestinationServer = Destination.Server;
+                    transfer.DestinationDatabase = newdb.Name;
+                    transfer.DestinationLoginSecure = Destination.LoginSecurity;
+                    if (!Destination.LoginSecurity)
+                    {
+                        transfer.DestinationLogin = Destination.UserId;
+                        transfer.DestinationPassword = Destination.Password;
+                    }
+                    transfer.TransferData();
+                    #endregion
 
-            // TODO: 2.   If No date range, use transfer copy all database.
+                    #region Get Source Data and Filter
+
+                    #endregion
+                }
+            }
+            // DONE: 1.   Check destination database exsits.
+            // DONE: 2.   If No date range, use transfer copy all database.
             // TODO: 2-1. If use date range, DataTable.Select(); filter Jobs key (klKey) and filter another table has FK by Jobs (fkJobKey, klJobKey)
             // TODO: 2-2. Use Sqlbulk copy datatable
             // TODO: 3.   If YES  Check db version
