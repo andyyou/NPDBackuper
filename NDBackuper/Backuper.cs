@@ -76,10 +76,13 @@ namespace NDBackuper
         }
         
         /// <summary>
-        /// 檢查來源及目的資料庫版本
+        /// Compare source and destination database version
+        /// 1. Source equal to destination : true
+        /// 2. Source newer than destination, upgrade database and return upgrade result
+        /// 3. Destination newer than source, stop backup task
         /// </summary>
-        /// <returns>來源大於目的：1、來源等於目的：0、來源小於目的：-1</returns>
-        public int CheckVersion()
+        /// <returns>若來源版本相同或升級成功：true、來源版本較舊或升級失敗：false</returns>
+        public bool CheckVersion()
         {
             int sourceVer = (int)(DbHelper.ReadOne(Source.ConnectionString(),
                              "Select TOP 1 VersionNum From WebDBVersion Order By klKey DESC"));
@@ -88,16 +91,46 @@ namespace NDBackuper
 
             if (sourceVer - destinationVer > 0)
             {
-                return 1;
+                return UpgradeDatabase(sourceVer, destinationVer);
             }
             else if (sourceVer == destinationVer)
             {
-                return 0;
+                return true;
             }
             else
             {
-                return -1;
+                return false;
             }
+        }
+
+        /// <summary>
+        /// Upgrade database
+        /// </summary>
+        /// <returns>return upgrade result</returns>
+        public bool UpgradeDatabase(int sourceVer, int destinationVer)
+        {
+            sourceVer = 25;
+            // Get installation directory from registry
+            Microsoft.Win32.RegistryKey registry = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Wow6432Node\Wintriss Engineering\Web Inspector");
+            if (registry != null)
+            {
+                if (registry.GetValueNames().Contains("INSTALLDIR"))
+                {
+                    string dbUtilityDir = registry.GetValue("INSTALLDIR").ToString() + @"\Database Utility\";
+                    List<string> upgradeCommand = new List<string>();
+
+                    while (sourceVer <= destinationVer)
+                    {
+                        upgradeCommand.AddRange(System.IO.Directory.GetFiles(dbUtilityDir)
+                            .Select(f => System.IO.Path.GetFileName(f))
+                            .Where(f => f.StartsWith(string.Format("Upgrade_{0}", sourceVer)))
+                            .ToList());
+                        sourceVer++;
+                    }
+                }
+            }
+
+            return false;
         }
         #endregion
 
