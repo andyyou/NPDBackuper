@@ -11,6 +11,11 @@ namespace NDBackuper
 {
     public static class DbHelper
     {
+        public static List<string> SqlBulkLog { get; set; }
+        public static DbHelper()
+        {
+            SqlBulkLog = new List<string>();
+        }
         public static object ReadOne(string conn, string sql, params SqlParameter[] parms)
         {
             using (SqlConnection connection = new SqlConnection(conn))
@@ -59,7 +64,6 @@ namespace NDBackuper
                 }
             }
         }
-
         public static void ExecuteSqlBulk(string conn, DataTable dt)
         {
             using (TransactionScope scope = new TransactionScope(TransactionScopeOption.Suppress))
@@ -76,9 +80,9 @@ namespace NDBackuper
                         //設定
                         sbc.BatchSize       = 10000; // 批次寫入的數量
                         sbc.BulkCopyTimeout = 60;    // 逾時時間
-                        //處理完後丟出一個事件,或是說處理幾筆後就丟出事件 
+                        //設定 NotifyAfter 屬性，以便在每複製 dt.Rows.Count 個資料列至資料表後，呼叫事件處理常式。
                         sbc.NotifyAfter = dt.Rows.Count;
-                        sbc.SqlRowsCopied += new SqlRowsCopiedEventHandler(mySbc_SqlRowsCopied);
+                        sbc.SqlRowsCopied += new SqlRowsCopiedEventHandler(OnSqlBulkCopied);
                         // 更新哪個資料表
                         sbc.DestinationTableName = dt.TableName;
                         foreach (var item in dt.Columns.Cast<DataColumn>())
@@ -92,6 +96,12 @@ namespace NDBackuper
                     }
                 }
             }
+        }
+        public static void OnSqlBulkCopied(object sender, SqlRowsCopiedEventArgs e)
+        {
+            string table = ((SqlBulkCopy)sender).DestinationTableName;
+            string msg = string.Format("Copied {0} records from {1}", e.RowsCopied, table);
+            SqlBulkLog.Add(msg);
         }
 
         private static void PrepareCommand(SqlCommand cmd, SqlConnection conn, SqlTransaction trans, string sql, SqlParameter[] parms)
