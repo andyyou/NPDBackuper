@@ -112,7 +112,6 @@
                     <ComboBox x:Name="cmbSourceDatabases" 
                               Height="26"
                               Margin="35 5 50 5" 
-                              ItemsSource="{Binding Path=SourceDatabases}"
                               SelectionChanged="SourceDatabases_SelectionChanged" 
                               />
                     <Label x:Name="lbSourceTablesTag" 
@@ -219,7 +218,7 @@
             </aw:WizardPage>
             <!--/Page 3-->
 
-            <aw:WizardPage x:Name="wzdPage4" Header="Database Name and Date Range">
+            <aw:WizardPage x:Name="wzdPage4" Header="Database Name and Date Range" Commit="Wizard_Commit">
                 <StackPanel>
                     <Label x:Name="lbBackupDatabaseNameTag" 
                            Margin="35 5 50 5" 

@@ -71,6 +71,7 @@
     <Compile Include="BooleanToImagePathcs.cs" />
     <Compile Include="CheckedListItem.cs" />
     <Compile Include="ConnectionConfig.cs" />
+    <Compile Include="DbHelper.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
