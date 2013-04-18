@@ -4,6 +4,12 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+// Source: http://msdn.microsoft.com/en-us/library/ms162129%28v=sql.105%29
+using Smo = Microsoft.SqlServer.Management.Smo;
+using Microsoft.SqlServer.Management.Smo.SqlEnum;
+using Microsoft.SqlServer.Management.Common;
+using Microsoft.SqlServer.Management.Sdk.Sfc;
+using System.Collections.ObjectModel;
 
 namespace NDBackuper
 {
@@ -40,27 +46,57 @@ namespace NDBackuper
 
         public Backuper(ConnectionConfig source, ConnectionConfig destination)
         {
-            this.Source = source;
-            this.Destination = destination;
-            this.IsCompleted = false;
+            this.Source           = source;
+            this.Destination      = destination;
+            this.IsCompleted      = false;
             this.IsDateFiltration = false;
-            this.TablesOfBackup = new List<string>();
+            this.TablesOfBackup   = new List<string>();
         }
 
         #region Method
-        
-        public void RunBackup()
+
+        public void RunBackup(List<string> backupTables)
         {
             // TODO: 執行緒晚點再移
-            BackgroundWorker bgw = new BackgroundWorker();
-            bgw.DoWork += bgwValidateConnection_DoWorkHandler;
-            bgw.RunWorkerCompleted += bgwValidateConnection_RunWorkerCompleted;
-            bgw.ProgressChanged += bgwValidateConnection_ProgressChanged;
+            BackgroundWorker bgw      = new BackgroundWorker();
+            bgw.DoWork               += bgwValidateConnection_DoWorkHandler;
+            bgw.RunWorkerCompleted   += bgwValidateConnection_RunWorkerCompleted;
+            bgw.ProgressChanged      += bgwValidateConnection_ProgressChanged;
             bgw.WorkerReportsProgress = true;
 
             // TODO: Backup Here
-            // TODO: 1.   Check destination database exsits.
-            // TODO: 2.   If No, use transfer copy all database.
+            // DONE: 1.   Check destination database exsits.
+            Smo.Server srvDestination = new Smo.Server(Destination.ServerConnection);
+            if (!srvDestination.Databases.Contains(Destination.Database))
+            {
+                Smo.Server srvSource                      = new Smo.Server(Source.ServerConnection);
+                Smo.Database dbSource                     = srvSource.Databases[Source.Database];
+                Smo.Transfer transfer                     = new Smo.Transfer(dbSource);
+                transfer.CopyAllUsers                     = true;
+                transfer.CreateTargetDatabase             = false;
+                transfer.CopyAllObjects                   = false;
+                transfer.CopyAllTables                    = false;
+                transfer.CopyData                         = true;
+                // transfer.CopySchema                    = true;
+                transfer.Options.WithDependencies         = true;
+                transfer.Options.DriAll                   = true;
+                transfer.Options.ContinueScriptingOnError = false;
+                foreach (string tbname in backupTables)
+                {
+                    transfer.ObjectList.Add(dbSource.Tables[tbname]);
+                }
+                transfer.CreateTargetDatabase   = true;
+                transfer.DestinationLoginSecure = Destination.LoginSecurity;
+                transfer.DestinationServer      = Destination.Server;
+                transfer.DestinationLogin       = Destination.UserId;
+                transfer.DestinationPassword    = Destination.Password;
+                transfer.DestinationDatabase    = Destination.Database;
+
+                transfer.ScriptTransfer();
+                transfer.TransferData();
+            }
+
+            // TODO: 2.   If No date range, use transfer copy all database.
             // TODO: 2-1. If use date range, DataTable.Select(); filter Jobs key (klKey) and filter another table has FK by Jobs (fkJobKey, klJobKey)
             // TODO: 2-2. Use Sqlbulk copy datatable
             // TODO: 3.   If YES  Check db version

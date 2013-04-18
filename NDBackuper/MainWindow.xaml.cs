@@ -33,26 +33,26 @@ namespace NDBackuper
         public MainWindow()
         {
             InitializeComponent();
-            this.Source = new ConnectionConfig();
-            this.Destination = new ConnectionConfig();
+            this.Source          = new ConnectionConfig();
+            this.Destination     = new ConnectionConfig();
             this.SourceDatabases = new List<string>();
-            this.ObservTables = new ObservableCollection<CheckedListItem>();
-            this.BackupObject = new Backuper(Source, Destination);
+            this.ObservTables    = new ObservableCollection<CheckedListItem>();
+            this.BackupObject    = new Backuper(Source, Destination);
 
             // Load properties
-            Source.Name = "Source";
-            Source.Server = Properties.Settings.Default.SourceServer;
-            Source.UserId = Properties.Settings.Default.SourceUserId;
-            Source.Password = Properties.Settings.Default.SourcePassword;
+            Source.Name          = "Source";
+            Source.Server        = Properties.Settings.Default.SourceServer;
+            Source.UserId        = Properties.Settings.Default.SourceUserId;
+            Source.Password      = Properties.Settings.Default.SourcePassword;
             Source.LoginSecurity = Properties.Settings.Default.SourceLoginSecurity;
-            Source.IsRemember = Properties.Settings.Default.SourceIsRemember;
+            Source.IsRemember    = Properties.Settings.Default.SourceIsRemember;
 
-            Destination.Name = "Destination";
-            Destination.Server = Properties.Settings.Default.DestinationServer;
-            Destination.UserId = Properties.Settings.Default.DestinationUserId;
-            Destination.Password = Properties.Settings.Default.DestinationPassword;
+            Destination.Name          = "Destination";
+            Destination.Server        = Properties.Settings.Default.DestinationServer;
+            Destination.UserId        = Properties.Settings.Default.DestinationUserId;
+            Destination.Password      = Properties.Settings.Default.DestinationPassword;
             Destination.LoginSecurity = Properties.Settings.Default.DestinationLoginSecurity;
-            Destination.IsRemember = Properties.Settings.Default.DestinationIsRemember;
+            Destination.IsRemember    = Properties.Settings.Default.DestinationIsRemember;
 
             this.DataContext = this;
 
@@ -151,7 +151,8 @@ namespace NDBackuper
         #region Page-5
         protected void btnRunBackup_Click(object sender, RoutedEventArgs e)
         {
-            BackupObject.CheckVersion();
+            List<string> backupTables = ObservTables.Where(o => o.IsChecked == true).Select(o => o.Name).ToList();
+            BackupObject.RunBackup(backupTables);
         }
         #endregion
         #endregion

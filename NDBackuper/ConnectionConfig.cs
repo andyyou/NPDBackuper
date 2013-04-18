@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.SqlServer.Management.Common;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data.SqlClient;
@@ -112,6 +113,20 @@ namespace NDBackuper
                 }
             }
         }
+        public ServerConnection ServerConnection
+        {
+            get
+            {
+                if (this.LoginSecurity)
+                {
+                    return new ServerConnection(this.Server);
+                }
+                else
+                {
+                    return new ServerConnection(this.Server, this.UserId, this.Password);
+                }
+            }
+        }
         public ConnectionConfig()
         {
             this.Server = @"local";
@@ -121,7 +136,6 @@ namespace NDBackuper
         {
             string conn = "";
             // Local Connection string
-
             if (this.LoginSecurity)
             {
                 if (String.IsNullOrEmpty(this.Server))
@@ -153,6 +167,7 @@ namespace NDBackuper
 
             return conn;
         }
+        
         public bool RunValidateConnection()
         {
             if (!String.IsNullOrEmpty(this.ConnectionString()))

@@ -11,11 +11,8 @@ namespace NDBackuper
 {
     public static class DbHelper
     {
-        public static List<string> SqlBulkLog { get; set; }
-        public static DbHelper()
-        {
-            SqlBulkLog = new List<string>();
-        }
+        public static List<string> SqlBulkLog = new List<string>();
+        
         public static object ReadOne(string conn, string sql, params SqlParameter[] parms)
         {
             using (SqlConnection connection = new SqlConnection(conn))
