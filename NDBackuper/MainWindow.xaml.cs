@@ -321,6 +321,7 @@ namespace NDBackuper
                 overrideTable.Add("UserROIParams");
                 overrideTable.Add("UserValues");
                 overrideTable.Add("UserJobParams");
+                overrideTable.Add("UserCutParams");
 
                 while (dr.Read())
                 {
