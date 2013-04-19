@@ -142,6 +142,7 @@ namespace NDBackuper
             // TODO: 2-1. If use date range, DataTable.Select(); filter Jobs key (klKey) and filter another table has FK by Jobs (fkJobKey, klJobKey)
             // TODO: 2-2. Use Sqlbulk copy datatable
             // TODO: 3.   If YES  Check db version
+            CheckVersion();
             // TODO: 3-1. Source > Destination => upgrade scripts
             // TODO: 3-2. Source == Destination => Run step 4 for merge data.
             // TODO: 3-3. Source < Destination => false; alert message and block;
@@ -153,12 +154,67 @@ namespace NDBackuper
 
         }
         
+        /// <summary>
+        /// Compare source and destination database version
+        /// 1. Source equal to destination : true
+        /// 2. Source newer than destination, upgrade database and return upgrade result
+        /// 3. Destination newer than source, stop backup task
+        /// </summary>
+        /// <returns>若來源版本相同或升級成功：true、來源版本較舊或升級失敗：false</returns>
         public bool CheckVersion()
         {
-            var x = DbHelper.ReadOne(Source.ConnectionString(),
-                             "Select TOP 1 * From WebDBVersion Order By klKey DESC");
-            var y = DbHelper.ReadOne(Destination.ConnectionString(),
-                             "Select TOP 1 * From WebDBVersion Order By klKey DESC");
+            int sourceVer = (int)(DbHelper.ReadOne(Source.ConnectionString(),
+                             "Select TOP 1 VersionNum From WebDBVersion Order By klKey DESC"));
+            int destinationVer = (int)(DbHelper.ReadOne(Destination.ConnectionString(),
+                             "Select TOP 1 VersionNum From WebDBVersion Order By klKey DESC"));
+
+            if (sourceVer - destinationVer > 0)
+            {
+                return UpgradeDatabase(sourceVer, destinationVer);
+            }
+            else if (sourceVer == destinationVer)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Upgrade database
+        /// </summary>
+        /// <returns>return upgrade result</returns>
+        public bool UpgradeDatabase(int sourceVer, int destinationVer)
+        {
+            sourceVer = 25;
+            // Get installation directory from registry
+            Microsoft.Win32.RegistryKey registry = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Wow6432Node\Wintriss Engineering\Web Inspector");
+            if (registry != null)
+            {
+                if (registry.GetValueNames().Contains("INSTALLDIR"))
+                {
+                    string dbUtilityDir = registry.GetValue("INSTALLDIR").ToString() + @"\Database Utility\";
+                    List<string> cmdPathList = new List<string>();
+
+                    while (sourceVer <= destinationVer)
+                    {
+                        cmdPathList.AddRange(System.IO.Directory.GetFiles(dbUtilityDir)
+                            .Where(f => f.Contains(string.Format("Upgrade_{0}", sourceVer)))
+                            .ToList());
+                        sourceVer++;
+                    }
+
+                    StringBuilder upgradeCommand = new StringBuilder();
+
+                    foreach (string path in cmdPathList)
+                    {
+
+                    }
+                }
+            }
+
             return false;
         }
         #endregion
