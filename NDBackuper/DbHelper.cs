@@ -196,7 +196,6 @@ namespace NDBackuper
                     string pkTable        = dr[2].ToString();
                     string pkColumn       = dr[3].ToString();
                     string constraintName = dr[4].ToString();
-
                     ForeignKeyConstraint fk = new ForeignKeyConstraint(
                                                         constraintName,
                                                         ds.Tables[pkTable].Columns[pkColumn],

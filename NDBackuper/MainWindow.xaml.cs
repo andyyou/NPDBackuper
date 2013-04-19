@@ -156,7 +156,7 @@ namespace NDBackuper
             // List<string> backupTables = ObservTables.Where(o => o.IsChecked == true).Select(o => o.Name).ToList();
             // BackupObject.IsDateFiltration = true;
             // BackupObject.RunBackup(backupTables);
-            // TODO: Resolve fill data order.
+            // TODO: Resolve fill data order
             DataSet ds = DbHelper.CopySechmaFromDatabase(Source.ConnectionString());
             SqlConnection conn = new SqlConnection(Source.ConnectionString());
             using (SqlDataAdapter adapter = new SqlDataAdapter("Select * From MCS", conn))
@@ -175,6 +175,7 @@ namespace NDBackuper
             MessageBox.Show(ds.Tables["Jobs"].Rows[0][0] + ":" + ds.Tables["Flaw"].Rows[0][1]);
             ds.Tables["Jobs"].Rows[0][0] = 1;
             MessageBox.Show(ds.Tables["Jobs"].Rows[0][0] + ":" + ds.Tables["Flaw"].Rows[0][1] );
+            // END
             MessageBox.Show("Done");
         }
         #endregion
