@@ -188,7 +188,8 @@ namespace NDBackuper
         /// <returns>return upgrade result</returns>
         public bool UpgradeDatabase(int sourceVer, int destinationVer)
         {
-            sourceVer = 25;
+            sourceVer = 30;
+            destinationVer = 28;
             // Get installation directory from registry
             Microsoft.Win32.RegistryKey registry = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Wow6432Node\Wintriss Engineering\Web Inspector");
             if (registry != null)
@@ -198,19 +199,18 @@ namespace NDBackuper
                     string dbUtilityDir = registry.GetValue("INSTALLDIR").ToString() + @"\Database Utility\";
                     List<string> cmdPathList = new List<string>();
 
-                    while (sourceVer <= destinationVer)
+                    while (destinationVer <= sourceVer)
                     {
                         cmdPathList.AddRange(System.IO.Directory.GetFiles(dbUtilityDir)
-                            .Where(f => f.Contains(string.Format("Upgrade_{0}", sourceVer)))
+                            .Where(f => f.Contains(string.Format("Upgrade_{0}", destinationVer)))
                             .ToList());
-                        sourceVer++;
+                        destinationVer++;
                     }
 
-                    StringBuilder upgradeCommand = new StringBuilder();
-
+                    string conn = Destination.ConnectionString();
                     foreach (string path in cmdPathList)
                     {
-
+                        DbHelper.ExecuteScript(conn, path);
                     }
                 }
             }

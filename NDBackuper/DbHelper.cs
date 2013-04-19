@@ -63,12 +63,13 @@ namespace NDBackuper
                 }
             }
         }
-        public static bool ExcuteScript(string cn, string scriptPath)
+        public static bool ExecuteScript(string cn, string scriptPath)
         {
             try
             {
                 System.IO.FileInfo file = new System.IO.FileInfo(scriptPath);
                 string script = file.OpenText().ReadToEnd();
+                file.OpenText().Close();
 
                 using (SqlConnection conn = new SqlConnection(cn))
                 {
@@ -78,13 +79,12 @@ namespace NDBackuper
                         server.ConnectionContext.ExecuteNonQuery(script);
                     }
                 }
-                file.OpenText().Close();
                 
                 return true;
             }
             catch (Exception e)
             {
-                return false;
+                throw e;
             }
         }
         public static void ExecuteSqlBulk(string conn, DataTable dt)
