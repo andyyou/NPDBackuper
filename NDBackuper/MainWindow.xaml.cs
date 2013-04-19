@@ -158,13 +158,9 @@ namespace NDBackuper
             // BackupObject.RunBackup(backupTables);
             // TODO: Resolve fill data order
             DataSet ds = DbHelper.CopySechmaFromDatabase(Source.ConnectionString());
-            List<string> order = new List<string>();
-            DbHelper.Recursive(ds, "Jobs", order);
-            DbHelper.Recursive(ds, "Event", order);
-            DbHelper.Recursive(ds, "ROIParams", order);
-            DbHelper.Recursive(ds, "Image", order);
-            DbHelper.Recursive(ds, "Flaw", order);
-            DbHelper.Recursive(ds, "JobQueueParams", order);
+            List<string> backupTables = ObservTables.Where(o => o.IsChecked == true).Select(o => o.Name).ToList();
+            DbHelper.Fill(Source.ConnectionString(), ds, backupTables);
+            
 
             SqlConnection conn = new SqlConnection(Source.ConnectionString());
             using (SqlDataAdapter adapter = new SqlDataAdapter("Select * From MCS", conn))
