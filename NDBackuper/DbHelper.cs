@@ -55,7 +55,7 @@ namespace NDBackuper
                         {
                             return obj;
                         }
-                    }
+                        }
                     catch (System.Data.SqlClient.SqlException e)
                     {
                         throw e;
@@ -207,7 +207,40 @@ namespace NDBackuper
             }
             return ds;
         }
-        
+        public static void Fill(string conn, DataSet ds, List<string> tables)
+        {
+            using (SqlDataAdapter adapter = new SqlDataAdapter("Select * From MCS", conn))
+            {
+                adapter.Fill(ds.Tables["MCS"]);
+            }
+            using (SqlDataAdapter adapter = new SqlDataAdapter("Select * From Jobs", conn))
+            {
+                adapter.Fill(ds.Tables["Jobs"]);
+            }
+            using (SqlDataAdapter adapter = new SqlDataAdapter("Select * From Flaw", conn))
+            {
+                adapter.Fill(ds.Tables["Flaw"]);
+            }
+        }
+        public static List<string> Recursive(DataSet ds, string tablename, List<string> created)
+        {
+            List<ForeignKeyConstraint> fks = new List<ForeignKeyConstraint>();
+            foreach(var constraint in ds.Tables[tablename].Constraints)
+            {
+                ForeignKeyConstraint fk = constraint as ForeignKeyConstraint;
+                if (fk == null) continue;
+
+                fks.Add(fk);
+            }
+            foreach (ForeignKeyConstraint f in fks)
+            {
+                if(!created.Contains(tablename))
+                    return Recursive(ds, f.RelatedTable.ToString(), created);
+            }
+            created.Add(tablename);
+            return created;
+        }
+
         private static void PrepareCommand(SqlCommand cmd, SqlConnection conn, SqlTransaction trans, string sql, SqlParameter[] parms)
         {
             if (conn.State != ConnectionState.Open)
