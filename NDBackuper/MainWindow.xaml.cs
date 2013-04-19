@@ -156,12 +156,26 @@ namespace NDBackuper
             // List<string> backupTables = ObservTables.Where(o => o.IsChecked == true).Select(o => o.Name).ToList();
             // BackupObject.IsDateFiltration = true;
             // BackupObject.RunBackup(backupTables);
-
+            // TODO: Resolve fill data order
             DataSet ds = DbHelper.CopySechmaFromDatabase(Source.ConnectionString());
-            foreach (DataTable dt in ds.Tables)
+            SqlConnection conn = new SqlConnection(Source.ConnectionString());
+            using (SqlDataAdapter adapter = new SqlDataAdapter("Select * From MCS", conn))
             {
-                ShowSchema(dt);
+                adapter.Fill(ds.Tables["MCS"]);
             }
+            using (SqlDataAdapter adapter = new SqlDataAdapter("Select * From Jobs", conn))
+            {
+                adapter.Fill(ds.Tables["Jobs"]);
+            }
+            using (SqlDataAdapter adapter = new SqlDataAdapter("Select * From Flaw", conn))
+            {
+                adapter.Fill(ds.Tables["Flaw"]);
+            }
+            ds.Tables["Jobs"].Columns["klKey"].ReadOnly = false;
+            MessageBox.Show(ds.Tables["Jobs"].Rows[0][0] + ":" + ds.Tables["Flaw"].Rows[0][1]);
+            ds.Tables["Jobs"].Rows[0][0] = 1;
+            MessageBox.Show(ds.Tables["Jobs"].Rows[0][0] + ":" + ds.Tables["Flaw"].Rows[0][1] );
+            // END
             MessageBox.Show("Done");
         }
         #endregion
@@ -358,6 +372,8 @@ namespace NDBackuper
                 }
             }
         }
+
+#if DEBUG
         public void ShowSchema(DataTable dt)
         {
             // PK
@@ -375,6 +391,8 @@ namespace NDBackuper
             System.Diagnostics.Debug.WriteLine("ChildRelations:" + dt.ChildRelations.Count.ToString());
             System.Diagnostics.Debug.WriteLine("-----------------------");
         }
+#endif
+
         #endregion
 
         #region Threads
