@@ -155,6 +155,17 @@ namespace NDBackuper
                 {
                     adapter.FillSchema(ds, SchemaType.Source, table);
                 }
+                foreach (var contraint in ds.Tables[table].Constraints)
+                {
+                    if (contraint == typeof(ForeignKeyConstraint))
+                    {
+                        ForeignKeyConstraint f = contraint as ForeignKeyConstraint;
+                        f.DeleteRule = System.Data.Rule.Cascade;
+                        f.UpdateRule = System.Data.Rule.Cascade;
+                        string x = f.RelatedTable.TableName;
+                    }
+                   
+                }
             }
             return ds;
         }
