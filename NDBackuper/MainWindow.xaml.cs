@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
@@ -151,9 +152,16 @@ namespace NDBackuper
         #region Page-5
         protected void btnRunBackup_Click(object sender, RoutedEventArgs e)
         {
-            List<string> backupTables = ObservTables.Where(o => o.IsChecked == true).Select(o => o.Name).ToList();
-            BackupObject.IsDateFiltration = true;
-            BackupObject.RunBackup(backupTables);
+            // DONE: accomplist testing
+            // List<string> backupTables = ObservTables.Where(o => o.IsChecked == true).Select(o => o.Name).ToList();
+            // BackupObject.IsDateFiltration = true;
+            // BackupObject.RunBackup(backupTables);
+
+            DataSet ds = DbHelper.CopySechmaFromDatabase(Source.ConnectionString());
+            foreach (DataTable dt in ds.Tables)
+            {
+                ShowSchema(dt);
+            }
             MessageBox.Show("Done");
         }
         #endregion
@@ -349,6 +357,23 @@ namespace NDBackuper
                     });
                 }
             }
+        }
+        public void ShowSchema(DataTable dt)
+        {
+            // PK
+            Console.WriteLine();
+            System.Diagnostics.Debug.WriteLine("PrimaryKey:"+dt.PrimaryKey.Length.ToString());
+            foreach (DataColumn c in dt.PrimaryKey)
+                System.Diagnostics.Debug.WriteLine(c.ColumnName);
+
+            // Constraint
+            System.Diagnostics.Debug.WriteLine("Constraints:" + dt.Constraints.Count.ToString());
+            foreach (Constraint c in dt.Constraints)
+                System.Diagnostics.Debug.WriteLine(c.ConstraintName);
+
+            System.Diagnostics.Debug.WriteLine("ParentRelations:" + dt.ParentRelations.Count.ToString());
+            System.Diagnostics.Debug.WriteLine("ChildRelations:" + dt.ChildRelations.Count.ToString());
+            System.Diagnostics.Debug.WriteLine("-----------------------");
         }
         #endregion
 
