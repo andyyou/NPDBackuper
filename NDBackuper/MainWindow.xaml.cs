@@ -154,13 +154,15 @@ namespace NDBackuper
         {
             // DONE: accomplist testing
             List<string> backupTables = ObservTables.Where(o => o.IsChecked == true).Select(o => o.Name).ToList();
-            
-            BackupObject.IsDateFiltration = true;
-            BackupObject.DateFrom = new DateTime(2012, 10, 15);
-            BackupObject.DateTo = new DateTime(2012, 10, 20);
+            BackupObject.IsDateFiltration = (bool)chkUseDateRange.IsChecked;
+            if (BackupObject.IsDateFiltration)
+            {
+                BackupObject.DateFrom = (DateTime)dpFrom.SelectedDate;
+                BackupObject.DateTo = (DateTime)dpTo.SelectedDate;
+            }
             BackupObject.RunBackup(backupTables);
-            
-            MessageBox.Show("Done");
+
+            BackupObject.Progress = 100;
         }
         #endregion
         #endregion

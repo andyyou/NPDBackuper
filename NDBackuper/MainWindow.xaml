@@ -272,6 +272,7 @@
                                       Width="300" 
                                       Height="30" 
                                       Margin="0 5 0 5"
+                                      Value="{Binding Path=BackupObject.Progress}"
                                       />
                         <Button x:Name="btnRunBackup" 
                                 Margin="335 5 50 5" 
@@ -294,6 +295,7 @@
                              TextWrapping="Wrap"
                              VerticalScrollBarVisibility="Visible"
                              AcceptsReturn="True"
+                             Text="{Binding Path=BackupObject.Log}"
                              />
 
                 </StackPanel>

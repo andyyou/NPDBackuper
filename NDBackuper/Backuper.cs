@@ -17,6 +17,7 @@ namespace NDBackuper
     public class Backuper : INotifyPropertyChanged
     {
         private int progress = 0;
+        private string log = "Ready to run backup.";
         public ConnectionConfig Source { get; set; }
         public ConnectionConfig Destination { get; set; }
         public bool IsCompleted { get; set; }
@@ -32,6 +33,14 @@ namespace NDBackuper
                     progress = value;
                     RaisePropertyChanged("Progress");
                 }
+            }
+        }
+        public string Log
+        {
+            get { return log; }
+            set {
+                log = value;
+                RaisePropertyChanged("Log");
             }
         }
         public event PropertyChangedEventHandler PropertyChanged;
@@ -62,108 +71,8 @@ namespace NDBackuper
             bgw.RunWorkerCompleted   += bgwValidateConnection_RunWorkerCompleted;
             bgw.ProgressChanged      += bgwValidateConnection_ProgressChanged;
             bgw.WorkerReportsProgress = true;
-
-            // TODO: Backup Here
-           
-            Smo.Server srvDestination = new Smo.Server(Destination.ServerConnection);
-           
-            if (!srvDestination.Databases.Contains(Destination.Database))
-            {
-                if (!IsDateFiltration)
-                {
-                    #region Copy All Database and Table to another Server
-                    Smo.Database newdb = new Smo.Database(srvDestination, Destination.Database);
-                    newdb.Create();
-                    Smo.Server srvSource = new Smo.Server(Source.ServerConnection);
-                    Smo.Database dbSource = srvSource.Databases[Source.Database];
-                    Smo.Transfer transfer = new Smo.Transfer(dbSource);
-                    transfer.CopyAllUsers = true;
-                    transfer.CopyAllObjects = false;
-                    transfer.CopyAllTables = false;
-                    transfer.CopyData = true;
-                    transfer.CopySchema = true;
-                    transfer.Options.WithDependencies = true;
-                    transfer.Options.DriAll = true;
-                    transfer.Options.ContinueScriptingOnError = false;
-                    foreach (string tbname in backupTables)
-                    {
-                        transfer.ObjectList.Add(dbSource.Tables[tbname]);
-                    }
-                    transfer.DestinationServer = Destination.Server;
-                    transfer.DestinationDatabase = newdb.Name;
-                    transfer.DestinationLoginSecure = Destination.LoginSecurity;
-                    if (!Destination.LoginSecurity)
-                    {
-                        transfer.DestinationLogin = Destination.UserId;
-                        transfer.DestinationPassword = Destination.Password;
-                    }
-                    transfer.TransferData();
-                    #endregion
-                }
-                else
-                {
-                    #region Create Database and Copy Table sechma
-                    Smo.Database newdb = new Smo.Database(srvDestination, Destination.Database);
-                    newdb.Create();
-                    Smo.Server srvSource = new Smo.Server(Source.ServerConnection);
-                    Smo.Database dbSource = srvSource.Databases[Source.Database];
-                    Smo.Transfer transfer = new Smo.Transfer(dbSource);
-                    transfer.CopyAllUsers = true;
-                    transfer.CopyAllObjects = false;
-                    transfer.CopyAllTables = false;
-                    transfer.CopyData = false;
-                    transfer.CopySchema = true;
-                    transfer.Options.WithDependencies = true;
-                    transfer.Options.DriAll = true;
-                    transfer.Options.ContinueScriptingOnError = false;
-                    foreach (string tbname in backupTables)
-                    {
-                        transfer.ObjectList.Add(dbSource.Tables[tbname]);
-                    }
-                    transfer.DestinationServer = Destination.Server;
-                    transfer.DestinationDatabase = newdb.Name;
-                    transfer.DestinationLoginSecure = Destination.LoginSecurity;
-                    if (!Destination.LoginSecurity)
-                    {
-                        transfer.DestinationLogin = Destination.UserId;
-                        transfer.DestinationPassword = Destination.Password;
-                    }
-                    transfer.TransferData();
-                    #endregion
-
-                    #region Get Source Data and Filter
-                    DataSet ds = DbHelper.CopySechmaFromDatabase(Source.ConnectionString());
-                    DbHelper.Fill(Source.ConnectionString(), ds, backupTables);
-                    // Filter DateRange
-                    ds.Tables["Jobs"].Rows.Cast<DataRow>().Where(j => (DateTime)j["Date"] < DateFrom || (DateTime)j["Date"] > DateTo).ToList().ForEach(j => j.Delete());
-                    ds.Tables["Jobs"].AcceptChanges();
-                    
-                    #endregion
-
-                    #region Execute SqlBulk Copy
-                    foreach (string  tbl in backupTables)
-                    {
-                        DbHelper.ExecuteSqlBulk(Destination.ConnectionString(), ds.Tables[tbl]);
-                    }
-                    #endregion
-                }
-            }
-            // DONE: 1.   Check destination database exsits.
-            // DONE: 2.   If No date range, use transfer copy all database.
-            // TODO: 2-1. If use date range, DataTable.Select(); filter Jobs key (klKey) and filter another table has FK by Jobs (fkJobKey, klJobKey)
-            // TODO: 2-2. Use Sqlbulk copy datatable
-            // TODO: 3.   If YES  Check db version
-
-            // CheckVersion();
-
-            // TODO: 3-1. Source > Destination => upgrade scripts
-            // TODO: 3-2. Source == Destination => Run step 4 for merge data.
-            // TODO: 3-3. Source < Destination => false; alert message and block;
-            // TODO: 4.   Deal table releationship PK/FK to create DataSet & Datatable from Source. 
-            // TODO: 5.   If table of ObservTable selected get record of Destination last PK int.
-            //            List<Record> Record.LastKey, Record.TableName, Record.PKColumnName
-            // TODO: 6.   DataSet.Fill(); get data and filter date range.
-            // TODO: 7.   Use Sqlbulk copy datatable.
+            bgw.RunWorkerAsync(backupTables);
+          
 
         }
         
@@ -233,14 +142,118 @@ namespace NDBackuper
         #region Threads
         public void bgwValidateConnection_DoWorkHandler(object sender, DoWorkEventArgs e)
         {
-            ConnectionConfig conn = e.Argument as ConnectionConfig;
-            conn.RunValidateConnection();
-            e.Result = conn;
-            BackgroundWorker bgw = sender as BackgroundWorker;
-            bgw.ReportProgress(100);
+            // TODO: Backup Here
+            List<string> backupTables = e.Argument as List<string>;
+            Smo.Server srvDestination = new Smo.Server(Destination.ServerConnection);
+            if (!srvDestination.Databases.Contains(Destination.Database))
+            {
+                if (!IsDateFiltration)
+                {
+                    #region Copy All Database and Table to another Server
+                    Smo.Database newdb = new Smo.Database(srvDestination, Destination.Database);
+                    newdb.Create();
+                    Smo.Server srvSource = new Smo.Server(Source.ServerConnection);
+                    Smo.Database dbSource = srvSource.Databases[Source.Database];
+                    Smo.Transfer transfer = new Smo.Transfer(dbSource);
+                    transfer.CopyAllUsers = true;
+                    transfer.CopyAllObjects = false;
+                    transfer.CopyAllTables = false;
+                    transfer.CopyData = true;
+                    transfer.CopySchema = true;
+                    transfer.Options.WithDependencies = true;
+                    transfer.Options.DriAll = true;
+                    transfer.ScriptingProgress += transfer_ScriptingProgress;
+                    transfer.Options.ContinueScriptingOnError = false;
+                    foreach (string tbname in backupTables)
+                    {
+                        transfer.ObjectList.Add(dbSource.Tables[tbname]);
+                    }
+                    transfer.DestinationServer = Destination.Server;
+                    transfer.DestinationDatabase = newdb.Name;
+                    transfer.DestinationLoginSecure = Destination.LoginSecurity;
+                    if (!Destination.LoginSecurity)
+                    {
+                        transfer.DestinationLogin = Destination.UserId;
+                        transfer.DestinationPassword = Destination.Password;
+                    }
+                    transfer.TransferData();
+                    #endregion
+                }
+                else
+                {
+                    #region Create Database and Copy Table sechma
+                    Smo.Database newdb = new Smo.Database(srvDestination, Destination.Database);
+                    newdb.Create();
+                    Smo.Server srvSource = new Smo.Server(Source.ServerConnection);
+                    Smo.Database dbSource = srvSource.Databases[Source.Database];
+                    Smo.Transfer transfer = new Smo.Transfer(dbSource);
+                    transfer.CopyAllUsers = true;
+                    transfer.CopyAllObjects = false;
+                    transfer.CopyAllTables = false;
+                    transfer.CopyData = false;
+                    transfer.CopySchema = true;
+                    transfer.Options.WithDependencies = true;
+                    transfer.Options.DriAll = true;
+                    transfer.Options.ContinueScriptingOnError = false;
+                    foreach (string tbname in backupTables)
+                    {
+                        transfer.ObjectList.Add(dbSource.Tables[tbname]);
+                    }
+                    transfer.DestinationServer = Destination.Server;
+                    transfer.DestinationDatabase = newdb.Name;
+                    transfer.DestinationLoginSecure = Destination.LoginSecurity;
+                    if (!Destination.LoginSecurity)
+                    {
+                        transfer.DestinationLogin = Destination.UserId;
+                        transfer.DestinationPassword = Destination.Password;
+                    }
+                    transfer.TransferData();
+                    #endregion
+
+                    #region Get Source Data and Filter
+                    DataSet ds = DbHelper.CopySechmaFromDatabase(Source.ConnectionString());
+                    DbHelper.Fill(Source.ConnectionString(), ds, backupTables);
+                    // Filter DateRange
+                    ds.Tables["Jobs"].Rows.Cast<DataRow>().Where(j => (DateTime)j["Date"] < DateFrom || (DateTime)j["Date"] > DateTo).ToList().ForEach(j => j.Delete());
+                    ds.Tables["Jobs"].AcceptChanges();
+
+                    #endregion
+
+                    #region Execute SqlBulk Copy
+                    foreach (string tbl in backupTables)
+                    {
+                        DbHelper.ExecuteSqlBulk(Destination.ConnectionString(), ds.Tables[tbl]);
+                    }
+                    #endregion
+                }
+            }
+            // DONE: 1.   Check destination database exsits.
+            // DONE: 2.   If No date range, use transfer copy all database.
+            // DONE: 2-1. If use date range, DataTable.Select(); filter Jobs key (klKey) and filter another table has FK by Jobs (fkJobKey, klJobKey)
+            // DONE: 2-2. Use Sqlbulk copy datatable
+            // TODO: 3.   If YES  Check db version
+
+            // CheckVersion();
+
+            // TODO: 3-1. Source > Destination => upgrade scripts
+            // TODO: 3-2. Source == Destination => Run step 4 for merge data.
+            // TODO: 3-3. Source < Destination => false; alert message and block;
+            // TODO: 4.   Deal table releationship PK/FK to create DataSet & Datatable from Source. 
+            // TODO: 5.   If table of ObservTable selected get record of Destination last PK int.
+            //            List<Record> Record.LastKey, Record.TableName, Record.PKColumnName
+            // TODO: 6.   DataSet.Fill(); get data and filter date range.
+            // TODO: 7.   Use Sqlbulk copy datatable.
+        }
+
+        private void transfer_ScriptingProgress(object sender, Smo.ProgressReportEventArgs e)
+        {
+            //this.Progress = (e.Current/e.Total) * 100;
+            this.Log += e.Current.XPathExpression[2].GetAttributeFromFilter("Name") + Environment.NewLine;
+               
         }
         private void bgwValidateConnection_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
+
         }
         private void bgwValidateConnection_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
