@@ -209,20 +209,22 @@ namespace NDBackuper
         }
         public static void Fill(string conn, DataSet ds, List<string> tables)
         {
-            using (SqlDataAdapter adapter = new SqlDataAdapter("Select * From MCS", conn))
+            List<string> order = new List<string>();
+            foreach (var tbl in tables)
             {
-                adapter.Fill(ds.Tables["MCS"]);
+               DbHelper.Recursive(ds, tbl, ref order);
             }
-            using (SqlDataAdapter adapter = new SqlDataAdapter("Select * From Jobs", conn))
+
+            foreach (var tbl in order)
             {
-                adapter.Fill(ds.Tables["Jobs"]);
-            }
-            using (SqlDataAdapter adapter = new SqlDataAdapter("Select * From Flaw", conn))
-            {
-                adapter.Fill(ds.Tables["Flaw"]);
+                string sql = string.Format("Select * From {0}", tbl);
+                using (SqlDataAdapter adapter = new SqlDataAdapter(sql, conn))
+                {
+                    adapter.Fill(ds.Tables[tbl]);
+                }
             }
         }
-        public static List<string> Recursive(DataSet ds, string tablename, List<string> created)
+        public static void Recursive(DataSet ds, string tablename, ref List<string> created)
         {
             List<ForeignKeyConstraint> fks = new List<ForeignKeyConstraint>();
             foreach(var constraint in ds.Tables[tablename].Constraints)
@@ -235,11 +237,11 @@ namespace NDBackuper
             foreach (ForeignKeyConstraint f in fks)
             {
                 if(!created.Contains(tablename))
-                    Recursive(ds, f.RelatedTable.ToString(), created);
+                    Recursive(ds, f.RelatedTable.ToString(),ref  created);
             }
             if (!created.Contains(tablename))
                 created.Add(tablename);
-            return created;
+            
         }
 
         private static void PrepareCommand(SqlCommand cmd, SqlConnection conn, SqlTransaction trans, string sql, SqlParameter[] parms)
