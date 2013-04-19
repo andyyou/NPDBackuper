@@ -188,8 +188,6 @@ namespace NDBackuper
         /// <returns>return upgrade result</returns>
         public bool UpgradeDatabase(int sourceVer, int destinationVer)
         {
-            sourceVer = 30;
-            destinationVer = 28;
             // Get installation directory from registry
             Microsoft.Win32.RegistryKey registry = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Wow6432Node\Wintriss Engineering\Web Inspector");
             if (registry != null)
