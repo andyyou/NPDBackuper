@@ -10,13 +10,13 @@ using Microsoft.SqlServer.Management.Smo.SqlEnum;
 using Microsoft.SqlServer.Management.Common;
 using Microsoft.SqlServer.Management.Sdk.Sfc;
 using System.Collections.ObjectModel;
+using System.Data;
 
 namespace NDBackuper
 {
     public class Backuper : INotifyPropertyChanged
     {
         private int progress = 0;
-        protected List<string> TablesOfBackup { get; set; }
         public ConnectionConfig Source { get; set; }
         public ConnectionConfig Destination { get; set; }
         public bool IsCompleted { get; set; }
@@ -50,7 +50,6 @@ namespace NDBackuper
             this.Destination      = destination;
             this.IsCompleted      = false;
             this.IsDateFiltration = false;
-            this.TablesOfBackup   = new List<string>();
         }
 
         #region Method
@@ -133,7 +132,19 @@ namespace NDBackuper
                     #endregion
 
                     #region Get Source Data and Filter
+                    DataSet ds = DbHelper.CopySechmaFromDatabase(Source.ConnectionString());
+                    DbHelper.Fill(Source.ConnectionString(), ds, backupTables);
+                    // Filter DateRange
+                    ds.Tables["Jobs"].Rows.Cast<DataRow>().Where(j => (DateTime)j["Date"] < DateFrom || (DateTime)j["Date"] > DateTo).ToList().ForEach(j => j.Delete());
+                    ds.Tables["Jobs"].AcceptChanges();
+                    
+                    #endregion
 
+                    #region Execute SqlBulk Copy
+                    foreach (string  tbl in backupTables)
+                    {
+                        DbHelper.ExecuteSqlBulk(Destination.ConnectionString(), ds.Tables[tbl]);
+                    }
                     #endregion
                 }
             }
@@ -142,7 +153,9 @@ namespace NDBackuper
             // TODO: 2-1. If use date range, DataTable.Select(); filter Jobs key (klKey) and filter another table has FK by Jobs (fkJobKey, klJobKey)
             // TODO: 2-2. Use Sqlbulk copy datatable
             // TODO: 3.   If YES  Check db version
-            CheckVersion();
+
+            // CheckVersion();
+
             // TODO: 3-1. Source > Destination => upgrade scripts
             // TODO: 3-2. Source == Destination => Run step 4 for merge data.
             // TODO: 3-3. Source < Destination => false; alert message and block;

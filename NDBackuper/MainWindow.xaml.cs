@@ -153,33 +153,13 @@ namespace NDBackuper
         protected void btnRunBackup_Click(object sender, RoutedEventArgs e)
         {
             // DONE: accomplist testing
-            // List<string> backupTables = ObservTables.Where(o => o.IsChecked == true).Select(o => o.Name).ToList();
-            // BackupObject.IsDateFiltration = true;
-            // BackupObject.RunBackup(backupTables);
-            // TODO: Resolve fill data order
-            DataSet ds = DbHelper.CopySechmaFromDatabase(Source.ConnectionString());
             List<string> backupTables = ObservTables.Where(o => o.IsChecked == true).Select(o => o.Name).ToList();
-            DbHelper.Fill(Source.ConnectionString(), ds, backupTables);
             
-
-            SqlConnection conn = new SqlConnection(Source.ConnectionString());
-            using (SqlDataAdapter adapter = new SqlDataAdapter("Select * From MCS", conn))
-            {
-                adapter.Fill(ds.Tables["MCS"]);
-            }
-            using (SqlDataAdapter adapter = new SqlDataAdapter("Select * From Jobs", conn))
-            {
-                adapter.Fill(ds.Tables["Jobs"]);
-            }
-            using (SqlDataAdapter adapter = new SqlDataAdapter("Select * From Flaw", conn))
-            {
-                adapter.Fill(ds.Tables["Flaw"]);
-            }
-            ds.Tables["Jobs"].Columns["klKey"].ReadOnly = false;
-            MessageBox.Show(ds.Tables["Jobs"].Rows[0][0] + ":" + ds.Tables["Flaw"].Rows[0][1]);
-            ds.Tables["Jobs"].Rows[0][0] = 1;
-            MessageBox.Show(ds.Tables["Jobs"].Rows[0][0] + ":" + ds.Tables["Flaw"].Rows[0][1] );
-            // END
+            BackupObject.IsDateFiltration = true;
+            BackupObject.DateFrom = new DateTime(2012, 10, 15);
+            BackupObject.DateTo = new DateTime(2012, 10, 20);
+            BackupObject.RunBackup(backupTables);
+            
             MessageBox.Show("Done");
         }
         #endregion
