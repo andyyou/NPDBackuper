@@ -235,9 +235,10 @@ namespace NDBackuper
             foreach (ForeignKeyConstraint f in fks)
             {
                 if(!created.Contains(tablename))
-                    return Recursive(ds, f.RelatedTable.ToString(), created);
+                    Recursive(ds, f.RelatedTable.ToString(), created);
             }
-            created.Add(tablename);
+            if (!created.Contains(tablename))
+                created.Add(tablename);
             return created;
         }
 
