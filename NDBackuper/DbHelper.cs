@@ -11,6 +11,7 @@ namespace NDBackuper
 {
     public static class DbHelper
     {
+        public const string SQL_TABLELIST = "SELECT name FROM sys.tables WHERE is_ms_shipped = 0";
         public static List<string> SqlBulkLog = new List<string>();
         
         public static object ReadOne(string conn, string sql, params SqlParameter[] parms)
@@ -40,7 +41,6 @@ namespace NDBackuper
                 }
             }
         }  
- 
         public static int ExecuteSql(string cn, string sql, params SqlParameter[] parameters)
         {
             using (SqlConnection conn = new SqlConnection(cn))
@@ -100,13 +100,39 @@ namespace NDBackuper
             string msg = string.Format("Copied {0} records from {1}", e.RowsCopied, table);
             SqlBulkLog.Add(msg);
         }
-        public static DataSet CopyDatabase(string conn)
+        public static DataSet CopySechmaFromDatabase(string conn)
         {
+            #region Get Tables of conn database
+            List<string> tables = new List<string>();
+            using (SqlConnection connection = new SqlConnection(conn))
+            {
+                if (connection.State != ConnectionState.Open)
+                    connection.Open();
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = connection;
+                cmd.CommandText = SQL_TABLELIST;
+                SqlDataReader dr = cmd.ExecuteReader();
+                while (dr.Read())
+                {
+                    tables.Add(dr[0].ToString());
+                }
+            }
+            #endregion
+            
             DataSet ds = new DataSet();
-
+            SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder(conn);
+            ds.DataSetName = builder["Database"].ToString();
+            foreach (var table in tables)
+            {
+                string sql = string.Format("Select * From {0}", table);
+                using (SqlDataAdapter adapter = new SqlDataAdapter(sql,conn))
+                {
+                    adapter.FillSchema(ds, SchemaType.Source, table);
+                }
+            }
             return ds;
         }
-
+       
         private static void PrepareCommand(SqlCommand cmd, SqlConnection conn, SqlTransaction trans, string sql, SqlParameter[] parms)
         {
             if (conn.State != ConnectionState.Open)
