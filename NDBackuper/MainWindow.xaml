@@ -296,6 +296,7 @@
                              VerticalScrollBarVisibility="Visible"
                              AcceptsReturn="True"
                              Text="{Binding Path=BackupObject.Log}"
+                             TextChanged="txtLog_TextChanged"
                              />
 
                 </StackPanel>

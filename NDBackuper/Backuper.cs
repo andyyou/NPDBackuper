@@ -162,7 +162,9 @@ namespace NDBackuper
                     transfer.CopySchema = true;
                     transfer.Options.WithDependencies = true;
                     transfer.Options.DriAll = true;
-                    transfer.ScriptingProgress += transfer_ScriptingProgress;
+                    transfer.DiscoveryProgress += new Smo.ProgressReportEventHandler(ProgressEventHandler);
+                    transfer.ScriptingProgress += new Smo.ProgressReportEventHandler(ScriptingProgressEventHandler);
+                    transfer.DataTransferEvent += new DataTransferEventHandler(DataTransferHandler);
                     transfer.Options.ContinueScriptingOnError = false;
                     foreach (string tbname in backupTables)
                     {
@@ -244,16 +246,25 @@ namespace NDBackuper
             // TODO: 6.   DataSet.Fill(); get data and filter date range.
             // TODO: 7.   Use Sqlbulk copy datatable.
         }
-
-        private void transfer_ScriptingProgress(object sender, Smo.ProgressReportEventArgs e)
+        public void DataTransferHandler(object sender, DataTransferEventArgs e)
         {
+            this.Log += (e.DataTransferEventType.ToString() + " : " + e.Message + Environment.NewLine);
+            //System.Diagnostics.Debug.WriteLine(e.DataTransferEventType.ToString() + " : " + e.Message);
+        }
+
+        public static void ProgressEventHandler(object sender, Smo.ProgressReportEventArgs args)
+        {
+            //System.Diagnostics.Debug.Write(String.Format("Progress {0} of {1} . . . {2} \n", args.TotalCount, args.Total, args.Current));
+        }
+        private static void ScriptingProgressEventHandler(object sender, Smo.ProgressReportEventArgs e)
+        {
+            //System.Diagnostics.Debug.Write(String.Format("Progress {0} of {1} . . . {2} \n", e.TotalCount, e.Total, e.Current));
             //this.Progress = (e.Current/e.Total) * 100;
-            this.Log += e.Current.XPathExpression[2].GetAttributeFromFilter("Name") + Environment.NewLine;
-               
+            //this.Log += e.Current.XPathExpression[2].GetAttributeFromFilter("Name") + Environment.NewLine;   
         }
         private void bgwValidateConnection_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-
+            this.Log += "Backup Complete!!";
         }
         private void bgwValidateConnection_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {

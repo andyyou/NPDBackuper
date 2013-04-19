@@ -164,6 +164,11 @@ namespace NDBackuper
 
             BackupObject.Progress = 100;
         }
+
+        private void txtLog_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            txtLog.ScrollToEnd();
+        }
         #endregion
         #endregion
 
