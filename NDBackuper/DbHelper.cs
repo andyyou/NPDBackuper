@@ -14,6 +14,26 @@ namespace NDBackuper
     public static class DbHelper
     {
         public const string SQL_TABLELIST = "SELECT name FROM sys.tables WHERE is_ms_shipped = 0";
+        public const string SQL_LIST_CONSTRAINTS = @"SELECT
+                                                     K_Table = FK.TABLE_NAME,
+                                                     FK_Column = CU.COLUMN_NAME,
+                                                     PK_Table = PK.TABLE_NAME,
+                                                     PK_Column = PT.COLUMN_NAME,
+                                                     Constraint_Name = C.CONSTRAINT_NAME
+                                                     FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS C
+                                                     INNER JOIN INFORMATION_SCHEMA.TABLE_CONSTRAINTS FK 
+                                                           ON C.CONSTRAINT_NAME = FK.CONSTRAINT_NAME
+                                                     INNER JOIN INFORMATION_SCHEMA.TABLE_CONSTRAINTS PK 
+                                                           ON C.UNIQUE_CONSTRAINT_NAME = PK.CONSTRAINT_NAME
+                                                     INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE CU 
+                                                           ON C.CONSTRAINT_NAME = CU.CONSTRAINT_NAME
+                                                     INNER JOIN (
+                                                           SELECT i1.TABLE_NAME, i2.COLUMN_NAME
+                                                           FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS i1
+                                                     INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE i2 
+                                                           ON i1.CONSTRAINT_NAME = i2.CONSTRAINT_NAME
+                                                     WHERE i1.CONSTRAINT_TYPE = 'PRIMARY KEY'
+                                                     ) PT ON PT.TABLE_NAME = PK.TABLE_NAME";
         public static List<string> SqlBulkLog = new List<string>();
         
         public static object ReadOne(string conn, string sql, params SqlParameter[] parms)
@@ -144,10 +164,13 @@ namespace NDBackuper
                 }
             }
             #endregion
-            
+
+            #region Copy Table schema into DataSet(ds)
             DataSet ds = new DataSet();
+            ds.EnforceConstraints = true;
             SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder(conn);
             ds.DataSetName = builder["Database"].ToString();
+            
             foreach (var table in tables)
             {
                 string sql = string.Format("Select * From {0}", table);
@@ -155,21 +178,37 @@ namespace NDBackuper
                 {
                     adapter.FillSchema(ds, SchemaType.Source, table);
                 }
-                foreach (var contraint in ds.Tables[table].Constraints)
+            }
+            #endregion
+
+            using (SqlConnection connection = new SqlConnection(conn))
+            {
+                if (connection.State != ConnectionState.Open)
+                    connection.Open();
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = connection;
+                cmd.CommandText = SQL_LIST_CONSTRAINTS;
+                SqlDataReader dr = cmd.ExecuteReader();
+                while (dr.Read())
                 {
-                    if (contraint == typeof(ForeignKeyConstraint))
-                    {
-                        ForeignKeyConstraint f = contraint as ForeignKeyConstraint;
-                        f.DeleteRule = System.Data.Rule.Cascade;
-                        f.UpdateRule = System.Data.Rule.Cascade;
-                        string x = f.RelatedTable.TableName;
-                    }
-                   
+                    string fkTable        = dr[0].ToString();
+                    string fkColumn       = dr[1].ToString();
+                    string pkTable        = dr[2].ToString();
+                    string pkColumn       = dr[3].ToString();
+                    string constraintName = dr[4].ToString();
+
+                    ForeignKeyConstraint fk = new ForeignKeyConstraint(
+                                                        constraintName,
+                                                        ds.Tables[pkTable].Columns[pkColumn],
+                                                        ds.Tables[fkTable].Columns[fkColumn]);
+                    fk.DeleteRule = System.Data.Rule.Cascade;
+                    fk.UpdateRule = System.Data.Rule.Cascade;
+                    ds.Tables[fkTable].Constraints.Add(fk);
                 }
             }
             return ds;
         }
-       
+        
         private static void PrepareCommand(SqlCommand cmd, SqlConnection conn, SqlTransaction trans, string sql, SqlParameter[] parms)
         {
             if (conn.State != ConnectionState.Open)
