@@ -161,8 +161,6 @@ namespace NDBackuper
                 BackupObject.DateTo = (DateTime)dpTo.SelectedDate;
             }
             BackupObject.RunBackup(backupTables);
-
-            BackupObject.Progress = 100;
         }
 
         private void txtLog_TextChanged(object sender, TextChangedEventArgs e)
