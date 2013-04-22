@@ -17,7 +17,7 @@ namespace NDBackuper
     public class Backuper : INotifyPropertyChanged
     {
         private int progress = 0;
-        private string log = "Ready to run backup.";
+        private string log = "Ready to run backup." + Environment.NewLine;
         public ConnectionConfig Source { get; set; }
         public ConnectionConfig Destination { get; set; }
         public bool IsCompleted { get; set; }
@@ -248,17 +248,22 @@ namespace NDBackuper
         }
         public void DataTransferHandler(object sender, DataTransferEventArgs e)
         {
-            this.Log += (e.DataTransferEventType.ToString() + " : " + e.Message + Environment.NewLine);
-            //System.Diagnostics.Debug.WriteLine(e.DataTransferEventType.ToString() + " : " + e.Message);
+            // Only show information message at log
+            if (e.DataTransferEventType == DataTransferEventType.Information)
+            {
+                this.Log += (e.DataTransferEventType.ToString() + " : " + e.Message + Environment.NewLine);
+            }
         }
 
         public static void ProgressEventHandler(object sender, Smo.ProgressReportEventArgs args)
         {
-            //System.Diagnostics.Debug.Write(String.Format("Progress {0} of {1} . . . {2} \n", args.TotalCount, args.Total, args.Current));
+            //System.Windows.MessageBox.Show("ProgressEventHandler");
+            System.Diagnostics.Debug.Write(String.Format("Progress {0} of {1} . . . {2} \n", args.TotalCount, args.Total, args.Current));
         }
         private static void ScriptingProgressEventHandler(object sender, Smo.ProgressReportEventArgs e)
         {
-            //System.Diagnostics.Debug.Write(String.Format("Progress {0} of {1} . . . {2} \n", e.TotalCount, e.Total, e.Current));
+            //System.Windows.MessageBox.Show("ScriptingProgressEventHandler");
+            System.Diagnostics.Debug.Write(String.Format("Progress {0} of {1} . . . {2} \n", e.TotalCount, e.Total, e.Current));
             //this.Progress = (e.Current/e.Total) * 100;
             //this.Log += e.Current.XPathExpression[2].GetAttributeFromFilter("Name") + Environment.NewLine;   
         }
