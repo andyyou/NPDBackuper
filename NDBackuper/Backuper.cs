@@ -249,6 +249,8 @@ namespace NDBackuper
         public void DataTransferHandler(object sender, DataTransferEventArgs e)
         {
             // Only show information message at log
+            Smo.Transfer transfer = sender as Smo.Transfer;
+            this.Progress += 100 / transfer.Database.Tables.Count;
             if (e.DataTransferEventType == DataTransferEventType.Information)
             {
                 this.Log += (e.DataTransferEventType.ToString() + " : " + e.Message + Environment.NewLine);
@@ -270,6 +272,7 @@ namespace NDBackuper
         private void bgwValidateConnection_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             this.Log += "Backup Complete!!";
+            this.Progress = 100;
         }
         private void bgwValidateConnection_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
