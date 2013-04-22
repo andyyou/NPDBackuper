@@ -35,6 +35,8 @@ namespace NDBackuper
                                                      WHERE i1.CONSTRAINT_TYPE = 'PRIMARY KEY'
                                                      ) PT ON PT.TABLE_NAME = PK.TABLE_NAME";
         public static List<string> SqlBulkLog = new List<string>();
+        public static int SqlBulkProgress = 0;
+        public static int SqlBulkTablesCount = 0;
         
         public static object ReadOne(string conn, string sql, params SqlParameter[] parms)
         {

@@ -162,8 +162,6 @@ namespace NDBackuper
                     transfer.CopySchema = true;
                     transfer.Options.WithDependencies = true;
                     transfer.Options.DriAll = true;
-                    transfer.DiscoveryProgress += new Smo.ProgressReportEventHandler(ProgressEventHandler);
-                    transfer.ScriptingProgress += new Smo.ProgressReportEventHandler(ScriptingProgressEventHandler);
                     transfer.DataTransferEvent += new DataTransferEventHandler(DataTransferHandler);
                     transfer.Options.ContinueScriptingOnError = false;
                     foreach (string tbname in backupTables)
@@ -225,6 +223,8 @@ namespace NDBackuper
                     foreach (string tbl in backupTables)
                     {
                         DbHelper.ExecuteSqlBulk(Destination.ConnectionString(), ds.Tables[tbl]);
+                        this.Progress += 100 / backupTables.Count;
+                        this.Log += DbHelper.SqlBulkLog.LastOrDefault() + Environment.NewLine;
                     }
                     #endregion
                 }
@@ -250,24 +250,12 @@ namespace NDBackuper
         {
             // Only show information message at log
             Smo.Transfer transfer = sender as Smo.Transfer;
-            this.Progress += 100 / transfer.Database.Tables.Count;
+            int percentage = 100;
+            this.Progress += percentage / transfer.Database.Tables.Count;
             if (e.DataTransferEventType == DataTransferEventType.Information)
             {
                 this.Log += (e.DataTransferEventType.ToString() + " : " + e.Message + Environment.NewLine);
             }
-        }
-
-        public static void ProgressEventHandler(object sender, Smo.ProgressReportEventArgs args)
-        {
-            //System.Windows.MessageBox.Show("ProgressEventHandler");
-            System.Diagnostics.Debug.Write(String.Format("Progress {0} of {1} . . . {2} \n", args.TotalCount, args.Total, args.Current));
-        }
-        private static void ScriptingProgressEventHandler(object sender, Smo.ProgressReportEventArgs e)
-        {
-            //System.Windows.MessageBox.Show("ScriptingProgressEventHandler");
-            System.Diagnostics.Debug.Write(String.Format("Progress {0} of {1} . . . {2} \n", e.TotalCount, e.Total, e.Current));
-            //this.Progress = (e.Current/e.Total) * 100;
-            //this.Log += e.Current.XPathExpression[2].GetAttributeFromFilter("Name") + Environment.NewLine;   
         }
         private void bgwValidateConnection_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
