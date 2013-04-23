@@ -14,6 +14,7 @@
         <Grid.Resources>
             <cv:BooleanToHiddenVisibility x:Key="boolToVisibility"/>
             <cv:BooleanToImagePath x:Key="boolToImageSource"/>
+            <cv:IntToBool x:Key="intToBoolean"/>
         </Grid.Resources>
         <aw:Wizard x:Name="wzdMain" aw:Designer.PageIndex="1" Cancelled="wzdMain_Cancelled" Finished="wzdMain_Finished">
 
@@ -263,7 +264,9 @@
             </aw:WizardPage>
             <!--/Page 4-->
 
-            <aw:WizardPage x:Name="wzdPage5" Header="Progress">
+            <aw:WizardPage x:Name="wzdPage5" Header="Progress" AllowCancel="False" 
+                           AllowFinish="{Binding Path=BackupObject.Progress, 
+                           Converter={StaticResource intToBoolean}}">
                 <StackPanel>
                     <Grid Margin="35 5 20 5">
                         <ProgressBar  x:Name="pgbBackup" 

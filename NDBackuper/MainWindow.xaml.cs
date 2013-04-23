@@ -161,6 +161,8 @@ namespace NDBackuper
                 BackupObject.DateTo = (DateTime)dpTo.SelectedDate;
             }
             // TODO: review code here.
+            BackupObject.Log += "Starting..." + Environment.NewLine;
+            BackupObject.Progress = 2;
             BackupObject.RunBackup(backupTables);
         }
 
