@@ -177,6 +177,10 @@ namespace NDBackuper
         {
             this.Close();
         }
+        private void wzdMain_Finished(object sender, RoutedEventArgs e)
+        {
+            this.Close();
+        }
         private void Wizard_Commit(object sender, AvalonWizard.WizardPageConfirmEventArgs e)
         {
             switch (e.Page.Name)
@@ -418,5 +422,7 @@ namespace NDBackuper
         {
         }
         #endregion
+
+        
     }
 }
