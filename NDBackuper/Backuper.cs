@@ -205,13 +205,16 @@ namespace NDBackuper
                 #region Get Source Data and Filter
                 DataSet ds = DbHelper.CopySechmaFromDatabase(Source.ConnectionString());
                 List<string> sortTables = DbHelper.Fill(Source.ConnectionString(), ds, backupTables.Select(b=>b.Name).ToList());
-                ds.Tables["Jobs"].Rows.Cast<DataRow>().LastOrDefault().Delete(); // Always delete last record.
-                // Filter DateRange
-                if (IsDateFiltration)
+                if (ds.Tables["Jobs"].Rows.Count > 0)
                 {
-                    ds.Tables["Jobs"].Rows.Cast<DataRow>().Where(j => (DateTime)j["Date"] < DateFrom || (DateTime)j["Date"] > DateTo).ToList().ForEach(j => j.Delete());
+                    ds.Tables["Jobs"].Rows.Cast<DataRow>().LastOrDefault().Delete(); // Always delete last record.
+                    // Filter DateRange
+                    if (IsDateFiltration)
+                    {
+                        ds.Tables["Jobs"].Rows.Cast<DataRow>().Where(j => (DateTime)j["Date"] < DateFrom || (DateTime)j["Date"] > DateTo).ToList().ForEach(j => j.Delete());
+                    }
+                    ds.Tables["Jobs"].AcceptChanges();
                 }
-                ds.Tables["Jobs"].AcceptChanges();
                 #endregion
 
                 #region Execute SqlBulk Copy
@@ -219,7 +222,10 @@ namespace NDBackuper
                 {
                     DbHelper.ExecuteSqlBulk(Destination.ConnectionString(), ds.Tables[tbl]);
                     this.Progress += 100 / backupTables.Count;
-                    this.Log += DbHelper.SqlBulkLog.LastOrDefault() + Environment.NewLine;
+                    if (DbHelper.SqlBulkLog.Count > 0)
+                    {
+                        this.Log += DbHelper.SqlBulkLog.LastOrDefault() + Environment.NewLine;
+                    }
                 }
                 #endregion
             }
@@ -231,12 +237,15 @@ namespace NDBackuper
                     #region Get Source Data and Filter date range
                     DataSet ds = DbHelper.CopySechmaFromDatabase(Source.ConnectionString());
                     List<string> sortTables = DbHelper.Fill(Source.ConnectionString(), ds, backupTables.Select(b => b.Name).ToList());
-                    ds.Tables["Jobs"].Rows.Cast<DataRow>().LastOrDefault().Delete(); // Always delete last record.
-                    if (IsDateFiltration)
+                    if (ds.Tables["Jobs"].Rows.Count > 0)
                     {
-                        ds.Tables["Jobs"].Rows.Cast<DataRow>().Where(j => (DateTime)j["Date"] < DateFrom || (DateTime)j["Date"] > DateTo).ToList().ForEach(j => j.Delete());
+                        ds.Tables["Jobs"].Rows.Cast<DataRow>().LastOrDefault().Delete(); // Always delete last record.
+                        if (IsDateFiltration)
+                        {
+                            ds.Tables["Jobs"].Rows.Cast<DataRow>().Where(j => (DateTime)j["Date"] < DateFrom || (DateTime)j["Date"] > DateTo).ToList().ForEach(j => j.Delete());
+                        }
+                        ds.Tables["Jobs"].AcceptChanges();
                     }
-                    ds.Tables["Jobs"].AcceptChanges();
                     #endregion
 
                     #region Get destination PK list of table exists and modify for merge
@@ -275,7 +284,10 @@ namespace NDBackuper
                     {
                         DbHelper.ExecuteSqlBulk(Destination.ConnectionString(), ds.Tables[tbl]);
                         this.Progress += 100 / backupTables.Count;
-                        this.Log += DbHelper.SqlBulkLog.LastOrDefault() + Environment.NewLine;
+                        if (DbHelper.SqlBulkLog.Count > 0)
+                        {
+                            this.Log += DbHelper.SqlBulkLog.LastOrDefault() + Environment.NewLine;
+                        }
                     }
                     #endregion
                 }
