@@ -34,9 +34,9 @@ namespace NDBackuper
                                                            ON i1.CONSTRAINT_NAME = i2.CONSTRAINT_NAME
                                                      WHERE i1.CONSTRAINT_TYPE = 'PRIMARY KEY'
                                                      ) PT ON PT.TABLE_NAME = PK.TABLE_NAME";
+      
         public static List<string> SqlBulkLog = new List<string>();
-        public static int SqlBulkProgress = 0;
-        public static int SqlBulkTablesCount = 0;
+      
         
         public static object ReadOne(string conn, string sql, params SqlParameter[] parms)
         {
@@ -64,7 +64,45 @@ namespace NDBackuper
                     }
                 }
             }
-        }  
+        }
+        public static string PrimaryKeyColumn(string conn, string table)
+        {
+            using (SqlConnection connection = new SqlConnection(conn))
+            {
+                using (SqlCommand cmd = new SqlCommand())
+                {
+                    try
+                    {
+                        if (connection.State != ConnectionState.Open)
+                            connection.Open();
+                        cmd.Connection = connection;
+                        string format = @"select c.name 
+                                          from sys.index_columns ic 
+                                            join sys.indexes i on ic.index_id=i.index_id
+                                            join sys.columns c on c.column_id=ic.column_id
+                                          where 
+                                            i.[object_id] = object_id('{0}') and 
+                                            ic.[object_id] = object_id('{0}') and 
+                                            c.[object_id] = object_id('{0}') and
+                                            is_primary_key = 1";
+                        string sql = string.Format(format, table);
+
+                        cmd.CommandText = sql;
+                        cmd.CommandType = CommandType.Text;
+                        
+                        SqlDataReader reader = cmd.ExecuteReader();
+                        reader.Read();
+                        cmd.Parameters.Clear();
+                        return reader[0].ToString();
+                        
+                    }
+                    catch (System.Data.SqlClient.SqlException e)
+                    {
+                        throw e;
+                    }
+                }
+            }
+        }
         public static int ExecuteSql(string cn, string sql, params SqlParameter[] parameters)
         {
             using (SqlConnection conn = new SqlConnection(cn))
