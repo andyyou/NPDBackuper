@@ -57,16 +57,20 @@ namespace NDBackuper
         {
             this.Source           = source;
             this.Destination      = destination;
-            this.IsCompleted      = false;
+            this.IsCompleted      = true;
             this.IsDateFiltration = false;
         }
 
         #region Method
-
-        public void RunBackup(List<string> backupTables)
+        /// <summary>
+        /// Execute backup database.
+        /// </summary>
+        /// <param name="backupTables">Select backup tables</param>
+        public void RunBackup(List<CheckedListItem> backupTables)
         {
             // Set progress to zero before run backup
             this.Progress = 0;
+            this.IsCompleted = false;
             // TODO: 執行緒晚點再移
             BackgroundWorker bgw      = new BackgroundWorker();
             bgw.DoWork               += bgwValidateConnection_DoWorkHandler;
@@ -75,7 +79,22 @@ namespace NDBackuper
             bgw.WorkerReportsProgress = true;
             bgw.RunWorkerAsync(backupTables);
         }
-        
+        /// <summary>
+        /// Clear data for merge override table
+        /// </summary>
+        /// <param name="tables">override table</param>
+        public void DeleteDestinationOverride(List<string> tables)
+        {
+            foreach(string table in tables)
+            {
+                bool exists = DbHelper.IsTableExists(Destination.ConnectionString(), table);
+                if (exists)
+                {
+                    string sql = string.Format("Delete From {0}", table);
+                    DbHelper.ExecuteSql(Destination.ConnectionString(), sql);
+                }
+            }
+        }
         /// <summary>
         /// Compare source and destination database version
         /// 1. Source equal to destination : true
@@ -85,6 +104,13 @@ namespace NDBackuper
         /// <returns>若來源版本相同或升級成功：true、來源版本較舊或升級失敗：false</returns>
         public bool CheckVersion()
         {
+            bool sourceIsExists = DbHelper.IsTableExists(Source.ConnectionString(), "WebDBVersion");
+            bool destinationIsExists = DbHelper.IsTableExists(Destination.ConnectionString(), "WebDBVersion");
+            if (!sourceIsExists || !destinationIsExists)
+            {
+                return false;
+            }
+
             int sourceVer = (int)(DbHelper.ReadOne(Source.ConnectionString(),
                              "Select TOP 1 VersionNum From WebDBVersion Order By klKey DESC"));
             int destinationVer = (int)(DbHelper.ReadOne(Destination.ConnectionString(),
@@ -142,98 +168,60 @@ namespace NDBackuper
         #region Threads
         public void bgwValidateConnection_DoWorkHandler(object sender, DoWorkEventArgs e)
         {
-            // TODO: Backup Here
-            List<string> backupTables = e.Argument as List<string>;
+            List<CheckedListItem> backupTables = e.Argument as List<CheckedListItem>;
             Smo.Server srvDestination = new Smo.Server(Destination.ServerConnection);
             if (!srvDestination.Databases.Contains(Destination.Database))
             {
-                //if (!IsDateFiltration)
-                //{
-                //    #region Copy All Database and Table to another Server
-                //    Smo.Database newdb = new Smo.Database(srvDestination, Destination.Database);
-                //    newdb.Create();
-                //    Smo.Server srvSource = new Smo.Server(Source.ServerConnection);
-                //    Smo.Database dbSource = srvSource.Databases[Source.Database];
-                //    Smo.Transfer transfer = new Smo.Transfer(dbSource);
-                //    transfer.CopyAllUsers = true;
-                //    transfer.CopyAllObjects = false;
-                //    transfer.CopyAllTables = false;
-                //    transfer.CopyData = true;
-                //    transfer.CopySchema = true;
-                //    transfer.Options.WithDependencies = true;
-                //    transfer.Options.DriAll = true;
-                //    transfer.DataTransferEvent += new DataTransferEventHandler(DataTransferHandler);
-                //    transfer.Options.ContinueScriptingOnError = false;
-                //    // Create all table when database not exist
-                //    foreach (var tbl in dbSource.Tables)
-                //    {
-                //        transfer.ObjectList.Add(tbl);
-                //    }
-                //    transfer.DestinationServer = Destination.Server;
-                //    transfer.DestinationDatabase = newdb.Name;
-                //    transfer.DestinationLoginSecure = Destination.LoginSecurity;
-                //    if (!Destination.LoginSecurity)
-                //    {
-                //        transfer.DestinationLogin = Destination.UserId;
-                //        transfer.DestinationPassword = Destination.Password;
-                //    }
-                //    transfer.TransferData();
-                //    #endregion
-                //}
-                //else
-                //{
-                    #region Create Database and Copy Table sechma
-                    Smo.Database newdb = new Smo.Database(srvDestination, Destination.Database);
-                    newdb.Create();
-                    Smo.Server srvSource = new Smo.Server(Source.ServerConnection);
-                    Smo.Database dbSource = srvSource.Databases[Source.Database];
-                    Smo.Transfer transfer = new Smo.Transfer(dbSource);
-                    transfer.CopyAllUsers = true;
-                    transfer.CopyAllObjects = false;
-                    transfer.CopyAllTables = false;
-                    transfer.CopyData = false;
-                    transfer.CopySchema = true;
-                    transfer.Options.WithDependencies = true;
-                    transfer.Options.DriAll = true;
-                    transfer.Options.ContinueScriptingOnError = false;
-                    // Create all table when database not exist
-                    foreach (var tbl in dbSource.Tables)
-                    {
-                        transfer.ObjectList.Add(tbl);
-                    }
-                    transfer.DestinationServer = Destination.Server;
-                    transfer.DestinationDatabase = newdb.Name;
-                    transfer.DestinationLoginSecure = Destination.LoginSecurity;
-                    if (!Destination.LoginSecurity)
-                    {
-                        transfer.DestinationLogin = Destination.UserId;
-                        transfer.DestinationPassword = Destination.Password;
-                    }
-                    transfer.TransferData();
-                    #endregion
+                #region Create Database and Copy Table sechma
+                Smo.Database newdb = new Smo.Database(srvDestination, Destination.Database);
+                newdb.Create();
+                Smo.Server srvSource = new Smo.Server(Source.ServerConnection);
+                Smo.Database dbSource = srvSource.Databases[Source.Database];
+                Smo.Transfer transfer = new Smo.Transfer(dbSource);
+                transfer.CopyAllUsers = true;
+                transfer.CopyAllObjects = false;
+                transfer.CopyAllTables = false;
+                transfer.CopyData = false;
+                transfer.CopySchema = true;
+                transfer.Options.WithDependencies = true;
+                transfer.Options.DriAll = true;
+                transfer.Options.ContinueScriptingOnError = false;
+                // Create all table when database not exist
+                foreach (var tbl in dbSource.Tables)
+                {
+                    transfer.ObjectList.Add(tbl);
+                }
+                transfer.DestinationServer = Destination.Server;
+                transfer.DestinationDatabase = newdb.Name;
+                transfer.DestinationLoginSecure = Destination.LoginSecurity;
+                if (!Destination.LoginSecurity)
+                {
+                    transfer.DestinationLogin = Destination.UserId;
+                    transfer.DestinationPassword = Destination.Password;
+                }
+                transfer.TransferData();
+                #endregion
 
-                    #region Get Source Data and Filter
-                    DataSet ds = DbHelper.CopySechmaFromDatabase(Source.ConnectionString());
-                    List<string> sortTables = DbHelper.Fill(Source.ConnectionString(), ds, backupTables);
-                    ds.Tables["Jobs"].Rows.Cast<DataRow>().LastOrDefault().Delete(); // Always delete last record.
-                    // Filter DateRange
-                    if (IsDateFiltration)
-                    {
-                        ds.Tables["Jobs"].Rows.Cast<DataRow>().Where(j => (DateTime)j["Date"] < DateFrom || (DateTime)j["Date"] > DateTo).ToList().ForEach(j => j.Delete());
-                        ds.Tables["Jobs"].AcceptChanges();
-                    }
+                #region Get Source Data and Filter
+                DataSet ds = DbHelper.CopySechmaFromDatabase(Source.ConnectionString());
+                List<string> sortTables = DbHelper.Fill(Source.ConnectionString(), ds, backupTables.Select(b=>b.Name).ToList());
+                ds.Tables["Jobs"].Rows.Cast<DataRow>().LastOrDefault().Delete(); // Always delete last record.
+                // Filter DateRange
+                if (IsDateFiltration)
+                {
+                    ds.Tables["Jobs"].Rows.Cast<DataRow>().Where(j => (DateTime)j["Date"] < DateFrom || (DateTime)j["Date"] > DateTo).ToList().ForEach(j => j.Delete());
+                }
+                ds.Tables["Jobs"].AcceptChanges();
+                #endregion
 
-                    #endregion
-
-                    #region Execute SqlBulk Copy
-                    foreach (string tbl in sortTables)
-                    {
-                        DbHelper.ExecuteSqlBulk(Destination.ConnectionString(), ds.Tables[tbl]);
-                        this.Progress += 100 / backupTables.Count;
-                        this.Log += DbHelper.SqlBulkLog.LastOrDefault() + Environment.NewLine;
-                    }
-                    #endregion
-                //}
+                #region Execute SqlBulk Copy
+                foreach (string tbl in sortTables)
+                {
+                    DbHelper.ExecuteSqlBulk(Destination.ConnectionString(), ds.Tables[tbl]);
+                    this.Progress += 100 / backupTables.Count;
+                    this.Log += DbHelper.SqlBulkLog.LastOrDefault() + Environment.NewLine;
+                }
+                #endregion
             }
             else
             {
@@ -242,7 +230,7 @@ namespace NDBackuper
                     // TODO: now todo here.
                     #region Get Source Data and Filter date range
                     DataSet ds = DbHelper.CopySechmaFromDatabase(Source.ConnectionString());
-                    List<string> sortTables = DbHelper.Fill(Source.ConnectionString(), ds, backupTables);
+                    List<string> sortTables = DbHelper.Fill(Source.ConnectionString(), ds, backupTables.Select(b => b.Name).ToList());
                     ds.Tables["Jobs"].Rows.Cast<DataRow>().LastOrDefault().Delete(); // Always delete last record.
                     if (IsDateFiltration)
                     {
@@ -252,24 +240,34 @@ namespace NDBackuper
                     #endregion
 
                     #region Get destination PK list of table exists and modify for merge
+                    // filter override table don't modify key
+                    List<string> overrideTable = backupTables.Where(b => b.IsOverride == true).Select(b => b.Name).ToList();
                     foreach (string tbl in sortTables)
                     {
-                        string keycolumn = DbHelper.PrimaryKeyColumn(Destination.ConnectionString(), tbl);
-                        string sql = string.Format("Select TOP 1 {0} From {1} Order By {0} DESC", keycolumn, tbl);
-                        int? lastkey = (int?)(DbHelper.ReadOne(Destination.ConnectionString(), sql));
-                        if (lastkey != null)
+                        if (!overrideTable.Contains(tbl))
                         {
-                            int newkey = (int)lastkey + 1;
-                            int row = ds.Tables[tbl].Rows.Count;
-                            ds.Tables[tbl].Columns[keycolumn].ReadOnly = false;
-                            for (int i = row - 1; i >= 0; i--)
+                            string keycolumn = DbHelper.PrimaryKeyColumn(Destination.ConnectionString(), tbl);
+                            string sql = string.Format("Select TOP 1 {0} From {1} Order By {0} DESC", keycolumn, tbl);
+                            int? lastkey = (int?)(DbHelper.ReadOne(Destination.ConnectionString(), sql));
+                            if (lastkey != null)
                             {
-                                ds.Tables[tbl].Rows[i][keycolumn] = newkey + i;
+                                int newkey = (int)lastkey + 1;
+                                int row = ds.Tables[tbl].Rows.Count;
+                                ds.Tables[tbl].Columns[keycolumn].ReadOnly = false;
+                                for (int i = row - 1; i >= 0; i--)
+                                {
+                                    ds.Tables[tbl].Rows[i][keycolumn] = newkey + i;
+                                }
+                                ds.Tables[tbl].AcceptChanges();
                             }
-                            ds.Tables[tbl].AcceptChanges();
                         }
                     }
                     ds.AcceptChanges();
+                    #endregion
+
+                    #region Delete override table data
+                    List<string> clearTable = backupTables.Where(b => b.IsOverride == true).Select(b => b.Name).ToList();
+                    DeleteDestinationOverride(clearTable);
                     #endregion
 
                     #region Execute SqlBulk Copy
@@ -312,6 +310,7 @@ namespace NDBackuper
         {
             this.Log += "Backup Complete!!" + Environment.NewLine + Environment.NewLine;
             this.Progress = 100;
+            this.IsCompleted = true;
         }
         private void bgwValidateConnection_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {

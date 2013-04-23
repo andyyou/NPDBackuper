@@ -153,13 +153,14 @@ namespace NDBackuper
         protected void btnRunBackup_Click(object sender, RoutedEventArgs e)
         {
             // DONE: accomplist testing
-            List<string> backupTables = ObservTables.Where(o => o.IsChecked == true).Select(o => o.Name).ToList();
+            List<CheckedListItem> backupTables = ObservTables.Where(o => o.IsChecked == true).ToList();
             BackupObject.IsDateFiltration = (bool)chkUseDateRange.IsChecked;
             if (BackupObject.IsDateFiltration)
             {
                 BackupObject.DateFrom = (DateTime)dpFrom.SelectedDate;
                 BackupObject.DateTo = (DateTime)dpTo.SelectedDate;
             }
+            // TODO: review code here.
             BackupObject.RunBackup(backupTables);
         }
 
@@ -173,6 +174,10 @@ namespace NDBackuper
         #region Wizard Events
         // Close
         private void wzdMain_Cancelled(object sender, RoutedEventArgs e)
+        {
+            this.Close();
+        }
+        private void wzdMain_Finished(object sender, RoutedEventArgs e)
         {
             this.Close();
         }
@@ -417,5 +422,7 @@ namespace NDBackuper
         {
         }
         #endregion
+
+        
     }
 }

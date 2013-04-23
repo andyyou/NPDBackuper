@@ -15,7 +15,7 @@
             <cv:BooleanToHiddenVisibility x:Key="boolToVisibility"/>
             <cv:BooleanToImagePath x:Key="boolToImageSource"/>
         </Grid.Resources>
-        <aw:Wizard x:Name="wzdMain" aw:Designer.PageIndex="1" Cancelled="wzdMain_Cancelled">
+        <aw:Wizard x:Name="wzdMain" aw:Designer.PageIndex="1" Cancelled="wzdMain_Cancelled" Finished="wzdMain_Finished">
 
             <aw:WizardPage x:Name="wzdPage1" Header="Source Configurations"  Commit="Wizard_Commit">
                 <StackPanel>
@@ -279,6 +279,7 @@
                                 Content="Run"  
                                 Height="30" 
                                 Width="80" 
+                                IsEnabled="{Binding Path=BackupObject.IsCompleted}"
                                 Click="btnRunBackup_Click"
                                 />
                     </Grid>
