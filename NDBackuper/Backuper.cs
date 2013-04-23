@@ -212,7 +212,7 @@ namespace NDBackuper
 
                     #region Get Source Data and Filter
                     DataSet ds = DbHelper.CopySechmaFromDatabase(Source.ConnectionString());
-                    DbHelper.Fill(Source.ConnectionString(), ds, backupTables);
+                    List<string> sortTables = DbHelper.Fill(Source.ConnectionString(), ds, backupTables);
                     // Filter DateRange
                     ds.Tables["Jobs"].Rows.Cast<DataRow>().Where(j => (DateTime)j["Date"] < DateFrom || (DateTime)j["Date"] > DateTo).ToList().ForEach(j => j.Delete());
                     ds.Tables["Jobs"].AcceptChanges();
@@ -220,7 +220,7 @@ namespace NDBackuper
                     #endregion
 
                     #region Execute SqlBulk Copy
-                    foreach (string tbl in backupTables)
+                    foreach (string tbl in sortTables)
                     {
                         DbHelper.ExecuteSqlBulk(Destination.ConnectionString(), ds.Tables[tbl]);
                         this.Progress += 100 / backupTables.Count;
@@ -236,7 +236,7 @@ namespace NDBackuper
                     // TODO: now todo here.
                     #region Get Source Data and Filter date range
                     DataSet ds = DbHelper.CopySechmaFromDatabase(Source.ConnectionString());
-                    DbHelper.Fill(Source.ConnectionString(), ds, backupTables);
+                    List<string> sortTables = DbHelper.Fill(Source.ConnectionString(), ds, backupTables);
                     ds.Tables["Jobs"].Rows.Cast<DataRow>().LastOrDefault().Delete(); // Always delete last record.
                     if (IsDateFiltration)
                     {
@@ -246,25 +246,24 @@ namespace NDBackuper
                     #endregion
 
                     #region Get destination PK list of table exists and modify for merge
-                    
-                    foreach (string tbl in backupTables)
+                    foreach (string tbl in sortTables)
                     {
                         string keycolumn = DbHelper.PrimaryKeyColumn(Destination.ConnectionString(), tbl);
                         string sql = string.Format("Select TOP 1 {0} From {1} Order By {0} DESC", keycolumn, tbl);
-                        int keyvalue = (int)(DbHelper.ReadOne(Destination.ConnectionString(), sql));
-                        ds.Tables["Jobs"].Rows.Cast<DataRow>();
-                        ds.Tables["Jobs"].AcceptChanges();
+                        int lastkey = (int)(DbHelper.ReadOne(Destination.ConnectionString(), sql));
+                        int newkey = lastkey + 1;
+                        int row = ds.Tables[tbl].Rows.Count;
+                        for (int i = row - 1; i >= 0; i--)
+                        {
+                            ds.Tables[tbl].Rows[i][keycolumn] = newkey + i;
+                        }
+                        ds.Tables[tbl].AcceptChanges();
                     }
-                    #endregion
-
-                  
-
-                    #region Modify PK and FK value for merge
-
+                    ds.AcceptChanges();
                     #endregion
 
                     #region Execute SqlBulk Copy
-                    foreach (string tbl in backupTables)
+                    foreach (string tbl in sortTables)
                     {
                         DbHelper.ExecuteSqlBulk(Destination.ConnectionString(), ds.Tables[tbl]);
                         this.Progress += 100 / backupTables.Count;
