@@ -220,8 +220,10 @@ namespace NDBackuper
                         {
                             SavePorperties(Destination);
                         }
-                        txtDestinationDatabaseName.Text = Source.Database;
-
+                        if (txtDestinationDatabaseName.Text.Trim() == "")
+                        {
+                            txtDestinationDatabaseName.Text = Source.Database;
+                        }
                     }
                     break;
                 case "wzdPage4":
