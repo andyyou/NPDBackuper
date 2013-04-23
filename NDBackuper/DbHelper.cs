@@ -247,7 +247,7 @@ namespace NDBackuper
             }
             return ds;
         }
-        public static void Fill(string conn, DataSet ds, List<string> tables)
+        public static List<string> Fill(string conn, DataSet ds, List<string> tables)
         {
             List<string> order = new List<string>();
             foreach (var tbl in tables)
@@ -263,6 +263,7 @@ namespace NDBackuper
                     adapter.Fill(ds.Tables[tbl]);
                 }
             }
+            return order;
         }
         public static void Recursive(DataSet ds, string tablename, ref List<string> created)
         {
