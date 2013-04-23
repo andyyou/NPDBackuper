@@ -65,6 +65,8 @@ namespace NDBackuper
 
         public void RunBackup(List<string> backupTables)
         {
+            // Set progress to zero before run backup
+            this.Progress = 0;
             // TODO: 執行緒晚點再移
             BackgroundWorker bgw      = new BackgroundWorker();
             bgw.DoWork               += bgwValidateConnection_DoWorkHandler;
@@ -72,8 +74,6 @@ namespace NDBackuper
             bgw.ProgressChanged      += bgwValidateConnection_ProgressChanged;
             bgw.WorkerReportsProgress = true;
             bgw.RunWorkerAsync(backupTables);
-          
-
         }
         
         /// <summary>
@@ -215,6 +215,7 @@ namespace NDBackuper
                     #region Get Source Data and Filter
                     DataSet ds = DbHelper.CopySechmaFromDatabase(Source.ConnectionString());
                     List<string> sortTables = DbHelper.Fill(Source.ConnectionString(), ds, backupTables);
+                    ds.Tables["Jobs"].Rows.Cast<DataRow>().LastOrDefault().Delete(); // Always delete last record.
                     // Filter DateRange
                     if (IsDateFiltration)
                     {
@@ -309,7 +310,7 @@ namespace NDBackuper
         }
         private void bgwValidateConnection_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            this.Log += "Backup Complete!!";
+            this.Log += "Backup Complete!!" + Environment.NewLine + Environment.NewLine;
             this.Progress = 100;
         }
         private void bgwValidateConnection_ProgressChanged(object sender, ProgressChangedEventArgs e)
