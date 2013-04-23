@@ -36,7 +36,6 @@
                               Height="26"
                               FontSize="12" 
                               IsChecked="{Binding Path=Source.LoginSecurity,  Mode=TwoWay}"
-                              Click="SourceRemember_Click"
                               Content="Login Security (Local User)"
                               />
                     <Label x:Name="lbSourceAccountTag" 
@@ -96,6 +95,7 @@
                                   FontSize="12" 
                                   Margin="200,12,0,0" 
                                   Height="30" 
+                                  Click="SourceRemember_Click"
                                   IsChecked="{Binding Path=Source.IsRemember,  Mode=TwoWay}"
                                   />
                     </Grid>

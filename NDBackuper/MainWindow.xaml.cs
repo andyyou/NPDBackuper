@@ -65,13 +65,18 @@ namespace NDBackuper
         // 驗證 Source Connection
         protected void btnSourceConnValidation_Click(object sender, RoutedEventArgs e)
         {
+            // Reset
+            imgSourceStatus.Visibility = System.Windows.Visibility.Hidden;
+            btnSourceConnValidation.IsEnabled = false;
             Source.Database = "";
+
             BackgroundWorker bgw = new BackgroundWorker();
             bgw.DoWork += bgwValidateConnection_DoWorkHandler;
             bgw.RunWorkerCompleted += bgwValidateConnection_RunWorkerCompleted;
             bgw.WorkerReportsProgress = true;
             bgw.RunWorkerAsync(Source);
         }
+        // 切換記憶密碼
         private void SourceRemember_Click(object sender, RoutedEventArgs e)
         {
             Properties.Settings.Default.SourceIsRemember = Source.IsRemember;
@@ -108,13 +113,18 @@ namespace NDBackuper
         // 驗證 Destination Connection
         protected void btnDestinationConnValidation_Click(object sender, RoutedEventArgs e)
         {
+            // Reset
+            imgDestinationStatus.Visibility = System.Windows.Visibility.Hidden;
+            btnDestinationConnValidation.IsEnabled = false;
             Destination.Database = "";
+
             BackgroundWorker bgw = new BackgroundWorker();
             bgw.DoWork += bgwValidateConnection_DoWorkHandler;
             bgw.RunWorkerCompleted += bgwValidateConnection_RunWorkerCompleted;
             bgw.WorkerReportsProgress = true;
             bgw.RunWorkerAsync(Destination);
         }
+        // 切換記憶密碼
         private void DestinationRemember_Click(object sender, RoutedEventArgs e)
         {
             Properties.Settings.Default.DestinationIsRemember = Destination.IsRemember;
@@ -242,6 +252,11 @@ namespace NDBackuper
                     else
                     {
                         Destination.Database = txtDestinationDatabaseName.Text;
+                        if (String.IsNullOrEmpty(Destination.Database))
+                        {
+                            MessageBox.Show("Database name format error!");
+                            e.Cancel = true;
+                        }
                     }
                     if ((bool)chkUseDateRange.IsChecked)
                     {
@@ -408,9 +423,11 @@ namespace NDBackuper
             switch (conn.Name)
             { 
                 case "Source":
+                    btnSourceConnValidation.IsEnabled = true;
                     imgSourceStatus.Visibility = System.Windows.Visibility.Visible;
                     break;
                 case "Destination":
+                    btnDestinationConnValidation.IsEnabled = true;
                     imgDestinationStatus.Visibility = System.Windows.Visibility.Visible;
                     break;
             }

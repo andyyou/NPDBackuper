@@ -15,6 +15,7 @@ namespace NDBackuper
         private const string IP_PATTEN    = @"([2]([5][0-5]|[0-4][0-9])|[0-1]?[0-9]{1,2})(\.([2]([5][0-5]|[0-4][0-9])|[0-1]?[0-9]{1,2})){3}";
         private const string URL_PATTEN   = @"([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,6}";
         private const string LOCAL_PATTEN = @"([l|L][o|O][c|C][a|A][l|L]|\([l|L][o|O][c|C][a|A][l|L][d|D][b|B]\)\\[\w._\\-]*)";
+        private const string PIPE_PATTEN = @"^([A-Za-z]{2,})";
         private const string DB_PATTEN    = @"^([A-Za-z]*)";
         private string _name;
         private string _server;
@@ -38,7 +39,9 @@ namespace NDBackuper
                 Regex rexIp = new Regex(IP_PATTEN);
                 Regex rexUrl = new Regex(URL_PATTEN);
                 Regex rexLocal = new Regex(LOCAL_PATTEN);
-                if (rexIp.IsMatch(value) || rexUrl.IsMatch(value) || rexLocal.IsMatch(value))
+                Regex rexPipe = new Regex(PIPE_PATTEN);
+                if (rexIp.IsMatch(value) || rexUrl.IsMatch(value) ||
+                    rexLocal.IsMatch(value) || rexPipe.IsMatch(value))
                 {
                     _server = value;
                     RaisePropertyChanged("Server");

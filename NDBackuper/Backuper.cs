@@ -289,8 +289,8 @@ namespace NDBackuper
             // DONE: 3-1. Source > Destination => upgrade scripts
             // DONE: 3-2. Source == Destination => Run step 4 for merge data.
             // DONE: 3-3. Source < Destination => false; alert message and block;
-            // TODO: 4.   Deal table releationship PK/FK to create DataSet & Datatable from Source. 
-            // TODO: 5.   If table of ObservTable selected get record of Destination last PK int.
+            // DONE: 4.   Deal table releationship PK/FK to create DataSet & Datatable from Source. 
+            // DONE: 5.   If table of ObservTable selected get record of Destination last PK int.
             //            List<Record> Record.LastKey, Record.TableName, Record.PKColumnName
             // TODO: 6.   DataSet.Fill(); get data and filter date range.
             // TODO: 7.   Use Sqlbulk copy datatable.
