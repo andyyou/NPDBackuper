@@ -14,6 +14,7 @@
         <Grid.Resources>
             <cv:BooleanToHiddenVisibility x:Key="boolToVisibility"/>
             <cv:BooleanToImagePath x:Key="boolToImageSource"/>
+            <cv:IntToBool x:Key="intToBoolean"/>
         </Grid.Resources>
         <aw:Wizard x:Name="wzdMain" aw:Designer.PageIndex="1" Cancelled="wzdMain_Cancelled" Finished="wzdMain_Finished">
 
@@ -35,7 +36,6 @@
                               Height="26"
                               FontSize="12" 
                               IsChecked="{Binding Path=Source.LoginSecurity,  Mode=TwoWay}"
-                              Click="SourceRemember_Click"
                               Content="Login Security (Local User)"
                               />
                     <Label x:Name="lbSourceAccountTag" 
@@ -95,6 +95,7 @@
                                   FontSize="12" 
                                   Margin="200,12,0,0" 
                                   Height="30" 
+                                  Click="SourceRemember_Click"
                                   IsChecked="{Binding Path=Source.IsRemember,  Mode=TwoWay}"
                                   />
                     </Grid>
@@ -263,7 +264,9 @@
             </aw:WizardPage>
             <!--/Page 4-->
 
-            <aw:WizardPage x:Name="wzdPage5" Header="Progress">
+            <aw:WizardPage x:Name="wzdPage5" Header="Progress" AllowCancel="False" 
+                           AllowFinish="{Binding Path=BackupObject.Progress, 
+                           Converter={StaticResource intToBoolean}}">
                 <StackPanel>
                     <Grid Margin="35 5 20 5">
                         <ProgressBar  x:Name="pgbBackup" 
