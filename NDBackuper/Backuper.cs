@@ -229,17 +229,59 @@ namespace NDBackuper
                     #endregion
                 }
             }
+            else
+            {
+                if (CheckVersion())
+                {
+                    // TODO: now todo here.
+                    #region Get Source Data and Filter date range
+                    DataSet ds = DbHelper.CopySechmaFromDatabase(Source.ConnectionString());
+                    DbHelper.Fill(Source.ConnectionString(), ds, backupTables);
+                    ds.Tables["Jobs"].Rows.Cast<DataRow>().LastOrDefault().Delete(); // Always delete last record.
+                    if (IsDateFiltration)
+                    {
+                        ds.Tables["Jobs"].Rows.Cast<DataRow>().Where(j => (DateTime)j["Date"] < DateFrom || (DateTime)j["Date"] > DateTo).ToList().ForEach(j => j.Delete());
+                    }
+                    ds.Tables["Jobs"].AcceptChanges();
+                    #endregion
+
+                    #region Get destination PK list of table exists and modify for merge
+                    
+                    foreach (string tbl in backupTables)
+                    {
+                        string keycolumn = DbHelper.PrimaryKeyColumn(Destination.ConnectionString(), tbl);
+                        string sql = string.Format("Select TOP 1 {0} From {1} Order By {0} DESC", keycolumn, tbl);
+                        int keyvalue = (int)(DbHelper.ReadOne(Destination.ConnectionString(), sql));
+                        ds.Tables["Jobs"].Rows.Cast<DataRow>();
+                        ds.Tables["Jobs"].AcceptChanges();
+                    }
+                    #endregion
+
+                  
+
+                    #region Modify PK and FK value for merge
+
+                    #endregion
+
+                    #region Execute SqlBulk Copy
+                    foreach (string tbl in backupTables)
+                    {
+                        DbHelper.ExecuteSqlBulk(Destination.ConnectionString(), ds.Tables[tbl]);
+                        this.Progress += 100 / backupTables.Count;
+                        this.Log += DbHelper.SqlBulkLog.LastOrDefault() + Environment.NewLine;
+                    }
+                    #endregion
+                }
+            }
             // DONE: 1.   Check destination database exsits.
             // DONE: 2.   If No date range, use transfer copy all database.
             // DONE: 2-1. If use date range, DataTable.Select(); filter Jobs key (klKey) and filter another table has FK by Jobs (fkJobKey, klJobKey)
             // DONE: 2-2. Use Sqlbulk copy datatable
-            // TODO: 3.   If YES  Check db version
-
+            // DONE: 3.   If YES  Check db version
             // CheckVersion();
-
-            // TODO: 3-1. Source > Destination => upgrade scripts
-            // TODO: 3-2. Source == Destination => Run step 4 for merge data.
-            // TODO: 3-3. Source < Destination => false; alert message and block;
+            // DONE: 3-1. Source > Destination => upgrade scripts
+            // DONE: 3-2. Source == Destination => Run step 4 for merge data.
+            // DONE: 3-3. Source < Destination => false; alert message and block;
             // TODO: 4.   Deal table releationship PK/FK to create DataSet & Datatable from Source. 
             // TODO: 5.   If table of ObservTable selected get record of Destination last PK int.
             //            List<Record> Record.LastKey, Record.TableName, Record.PKColumnName
