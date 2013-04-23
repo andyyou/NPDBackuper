@@ -153,13 +153,14 @@ namespace NDBackuper
         protected void btnRunBackup_Click(object sender, RoutedEventArgs e)
         {
             // DONE: accomplist testing
-            List<string> backupTables = ObservTables.Where(o => o.IsChecked == true).Select(o => o.Name).ToList();
+            List<CheckedListItem> backupTables = ObservTables.Where(o => o.IsChecked == true).ToList();
             BackupObject.IsDateFiltration = (bool)chkUseDateRange.IsChecked;
             if (BackupObject.IsDateFiltration)
             {
                 BackupObject.DateFrom = (DateTime)dpFrom.SelectedDate;
                 BackupObject.DateTo = (DateTime)dpTo.SelectedDate;
             }
+            // TODO: review code here.
             BackupObject.RunBackup(backupTables);
         }
 

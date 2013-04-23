@@ -284,6 +284,24 @@ namespace NDBackuper
                 created.Add(tablename);
             
         }
+        public static bool IsTableExists(string conn, string table)
+        {
+            using (SqlConnection connection = new SqlConnection(conn))
+            {
+                if (connection.State != ConnectionState.Open)
+                    connection.Open();
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = connection;
+                cmd.CommandText = SQL_TABLELIST;
+                SqlDataReader dr = cmd.ExecuteReader();
+                while (dr.Read())
+                {
+                    if (dr[0].ToString() == table)
+                        return true;
+                }
+                return false;
+            }
+        }
 
         private static void PrepareCommand(SqlCommand cmd, SqlConnection conn, SqlTransaction trans, string sql, SqlParameter[] parms)
         {
