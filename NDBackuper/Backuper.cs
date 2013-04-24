@@ -228,7 +228,6 @@ namespace NDBackuper
                 {
                     ds.Tables["Jobs"].Rows.Cast<DataRow>().LastOrDefault().Delete(); // Always delete last record.
                     ds.Tables["Jobs"].AcceptChanges();
-                    // Filter DateRange
                     if (IsDateFiltration)
                     {
                         ds.Tables["Jobs"].Rows.Cast<DataRow>().Where(j => (DateTime)j["Date"] < DateFrom || (DateTime)j["Date"] > DateTo).ToList().ForEach(j => j.Delete());
