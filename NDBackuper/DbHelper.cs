@@ -164,8 +164,15 @@ namespace NDBackuper
                         sbc.BatchSize       = 10000; // 批次寫入的數量
                         sbc.BulkCopyTimeout = 60;    // 逾時時間
                         //設定 NotifyAfter 屬性，以便在每複製 dt.Rows.Count 個資料列至資料表後，呼叫事件處理常式。
-                        sbc.NotifyAfter = dt.Rows.Count;
-                        sbc.SqlRowsCopied += new SqlRowsCopiedEventHandler(OnSqlBulkCopied);
+                        if (dt.Rows.Count < 1)
+                        {
+                            SqlBulkLog.Add(dt.TableName + " has no records.");
+                        }
+                        else
+                        {
+                            sbc.NotifyAfter = dt.Rows.Count;
+                            sbc.SqlRowsCopied += new SqlRowsCopiedEventHandler(OnSqlBulkCopied);
+                        }
                         // 更新哪個資料表
                         sbc.DestinationTableName = dt.TableName;
                         foreach (var item in dt.Columns.Cast<DataColumn>())

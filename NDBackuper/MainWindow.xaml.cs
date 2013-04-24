@@ -62,6 +62,18 @@ namespace NDBackuper
 
         #region Events
         #region Page-1
+        // 本地驗證時清空帳號密碼
+        private void chkSourceLoginSecurity_Click(object sender, RoutedEventArgs e)
+        {
+            Properties.Settings.Default.SourceLoginSecurity = Source.LoginSecurity;
+            if (Source.LoginSecurity)
+            {
+                Properties.Settings.Default.SourceServer = Source.Server;
+                Properties.Settings.Default.SourceUserId = "";
+                Properties.Settings.Default.SourcePassword = "";
+            }
+            Properties.Settings.Default.Save();
+        }
         // 驗證 Source Connection
         protected void btnSourceConnValidation_Click(object sender, RoutedEventArgs e)
         {
@@ -110,6 +122,18 @@ namespace NDBackuper
         #endregion
 
         #region Page-3
+        // 本地驗證時清空帳號密碼
+        private void chkDestinationLoginSecurity_Click(object sender, RoutedEventArgs e)
+        {
+            Properties.Settings.Default.DestinationLoginSecurity = Destination.LoginSecurity;
+            if (Source.LoginSecurity)
+            {
+                Properties.Settings.Default.DestinationServer = Destination.Server;
+                Properties.Settings.Default.DestinationUserId = "";
+                Properties.Settings.Default.DestinationPassword = "";
+            }
+            Properties.Settings.Default.Save();
+        }
         // 驗證 Destination Connection
         protected void btnDestinationConnValidation_Click(object sender, RoutedEventArgs e)
         {
@@ -172,7 +196,6 @@ namespace NDBackuper
             }
             // TODO: review code here.
             BackupObject.Log += "Starting..." + Environment.NewLine;
-            BackupObject.Progress = 2;
             BackupObject.RunBackup(backupTables);
         }
 

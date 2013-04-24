@@ -17,10 +17,11 @@ namespace NDBackuper
     public class Backuper : INotifyPropertyChanged
     {
         private int progress = 0;
+        private bool iscomplete = true;
         private string log = "Ready to run backup." + Environment.NewLine;
         public ConnectionConfig Source { get; set; }
         public ConnectionConfig Destination { get; set; }
-        public bool IsCompleted { get; set; }
+        
         public DateTime DateFrom { get; set; }
         public DateTime DateTo { get; set; }
         public bool IsDateFiltration { get; set; }
@@ -43,6 +44,15 @@ namespace NDBackuper
                 RaisePropertyChanged("Log");
             }
         }
+        public bool IsCompleted
+        {
+            get { return iscomplete; }
+            set
+            {
+                iscomplete = value;
+                RaisePropertyChanged("IsCompleted");
+            }
+        } 
         public event PropertyChangedEventHandler PropertyChanged;
         protected virtual void RaisePropertyChanged(String propertyName)
         {
@@ -69,7 +79,7 @@ namespace NDBackuper
         public void RunBackup(List<CheckedListItem> backupTables)
         {
             // Set progress to zero before run backup
-            this.Progress = 0;
+            this.Progress = 5;
             this.IsCompleted = false;
             // TODO: 執行緒晚點再移
             BackgroundWorker bgw      = new BackgroundWorker();
@@ -142,21 +152,30 @@ namespace NDBackuper
             {
                 if (registry.GetValueNames().Contains("INSTALLDIR"))
                 {
-                    string dbUtilityDir = registry.GetValue("INSTALLDIR").ToString() + @"\Database Utility\";
-                    List<string> cmdPathList = new List<string>();
-
-                    while (destinationVer <= sourceVer)
+                    try
                     {
-                        cmdPathList.AddRange(System.IO.Directory.GetFiles(dbUtilityDir)
-                            .Where(f => f.Contains(string.Format("Upgrade_{0}", destinationVer)))
-                            .ToList());
-                        destinationVer++;
+                        string dbUtilityDir = registry.GetValue("INSTALLDIR").ToString() + @"\Database Utility\";
+                        List<string> cmdPathList = new List<string>();
+
+                        while (destinationVer <= sourceVer)
+                        {
+                            cmdPathList.AddRange(System.IO.Directory.GetFiles(dbUtilityDir)
+                                .Where(f => f.Contains(string.Format("Upgrade_{0}", destinationVer)))
+                                .ToList());
+                            destinationVer++;
+                        }
+
+                        string conn = Destination.ConnectionString();
+                        foreach (string path in cmdPathList)
+                        {
+                            DbHelper.ExecuteScript(conn, path);
+                        }
+
+                        return true;
                     }
-
-                    string conn = Destination.ConnectionString();
-                    foreach (string path in cmdPathList)
+                    catch (Exception e)
                     {
-                        DbHelper.ExecuteScript(conn, path);
+                        return false;
                     }
                 }
             }
