@@ -33,6 +33,7 @@ namespace NDBackuper
         #region Constructor
         public MainWindow()
         {
+            // Package source : http://goo.gl/S03Hu
             InitializeComponent();
             this.Source          = new ConnectionConfig();
             this.Destination     = new ConnectionConfig();
