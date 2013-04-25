@@ -53,11 +53,8 @@ namespace NDBackuper
             get { return _userid; }
             set
             {
-                if (!string.IsNullOrEmpty(value))
-                {
                     _userid = value; 
                     RaisePropertyChanged("UserId");
-                }
             }
         }
         public string Password
@@ -65,11 +62,8 @@ namespace NDBackuper
             get { return _pwd; }
             set
             {
-                if (!string.IsNullOrEmpty(value))
-                {
                     _pwd = value;
                     RaisePropertyChanged("Password");
-                }
             }
         }
         public bool LoginSecurity

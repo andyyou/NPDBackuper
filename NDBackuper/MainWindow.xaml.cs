@@ -33,6 +33,7 @@ namespace NDBackuper
         #region Constructor
         public MainWindow()
         {
+            // Package source : http://goo.gl/S03Hu
             InitializeComponent();
             this.Source          = new ConnectionConfig();
             this.Destination     = new ConnectionConfig();
@@ -65,14 +66,11 @@ namespace NDBackuper
         // 本地驗證時清空帳號密碼
         private void chkSourceLoginSecurity_Click(object sender, RoutedEventArgs e)
         {
-            Properties.Settings.Default.SourceLoginSecurity = Source.LoginSecurity;
             if (Source.LoginSecurity)
             {
-                Properties.Settings.Default.SourceServer = Source.Server;
-                Properties.Settings.Default.SourceUserId = "";
-                Properties.Settings.Default.SourcePassword = "";
+                Source.UserId = "";
+                Source.Password = "";
             }
-            Properties.Settings.Default.Save();
         }
         // 驗證 Source Connection
         protected void btnSourceConnValidation_Click(object sender, RoutedEventArgs e)
@@ -125,14 +123,11 @@ namespace NDBackuper
         // 本地驗證時清空帳號密碼
         private void chkDestinationLoginSecurity_Click(object sender, RoutedEventArgs e)
         {
-            Properties.Settings.Default.DestinationLoginSecurity = Destination.LoginSecurity;
-            if (Source.LoginSecurity)
+            if (Destination.LoginSecurity)
             {
-                Properties.Settings.Default.DestinationServer = Destination.Server;
-                Properties.Settings.Default.DestinationUserId = "";
-                Properties.Settings.Default.DestinationPassword = "";
+                Destination.UserId = "";
+                Destination.Password = "";
             }
-            Properties.Settings.Default.Save();
         }
         // 驗證 Destination Connection
         protected void btnDestinationConnValidation_Click(object sender, RoutedEventArgs e)
