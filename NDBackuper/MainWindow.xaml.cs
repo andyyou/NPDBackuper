@@ -78,6 +78,7 @@ namespace NDBackuper
             // Reset
             imgSourceStatus.Visibility = System.Windows.Visibility.Hidden;
             btnSourceConnValidation.IsEnabled = false;
+            wzdPage1.AllowNext = false;
             Source.Database = "";
 
             BackgroundWorker bgw = new BackgroundWorker();
@@ -135,6 +136,7 @@ namespace NDBackuper
             // Reset
             imgDestinationStatus.Visibility = System.Windows.Visibility.Hidden;
             btnDestinationConnValidation.IsEnabled = false;
+            wzdPage3.AllowNext = false;
             Destination.Database = "";
 
             BackgroundWorker bgw = new BackgroundWorker();
@@ -442,10 +444,12 @@ namespace NDBackuper
             { 
                 case "Source":
                     btnSourceConnValidation.IsEnabled = true;
+                    wzdPage1.AllowNext = true;
                     imgSourceStatus.Visibility = System.Windows.Visibility.Visible;
                     break;
                 case "Destination":
                     btnDestinationConnValidation.IsEnabled = true;
+                    wzdPage3.AllowNext = true;
                     imgDestinationStatus.Visibility = System.Windows.Visibility.Visible;
                     break;
             }

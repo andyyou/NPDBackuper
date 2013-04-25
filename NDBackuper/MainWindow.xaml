@@ -9,6 +9,7 @@
         Width="540" 
         ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen"
+        Icon="wintriss.ico"
         >
     <Grid x:Name="gridMain">
         <Grid.Resources>
