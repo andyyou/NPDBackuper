@@ -118,6 +118,7 @@ namespace NDBackuper
             bool destinationIsExists = DbHelper.IsTableExists(Destination.ConnectionString(), "WebDBVersion");
             if (!sourceIsExists || !destinationIsExists)
             {
+                this.Log += "Can't get source/destination database version." + Environment.NewLine;
                 return false;
             }
 
@@ -128,7 +129,24 @@ namespace NDBackuper
 
             if (sourceVer - destinationVer > 0)
             {
-                return UpgradeDatabase(sourceVer, destinationVer);
+                System.Windows.MessageBoxResult result = System.Windows.MessageBox.Show("Warning: Database upgrade operation has risk.\n\nAre you sure continue?", "Database Upgrade Confirm", System.Windows.MessageBoxButton.OKCancel, System.Windows.MessageBoxImage.Warning);
+                if (result == System.Windows.MessageBoxResult.OK)
+                {
+                    if (UpgradeDatabase(sourceVer, destinationVer))
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        this.Log += "An error occurred during upgrade database." + Environment.NewLine;
+                        return false;
+                    }
+                }
+                else
+                {
+                    this.Log += "Database upgrade cancelled by user." + Environment.NewLine;
+                    return false;
+                }
             }
             else if (sourceVer == destinationVer)
             {
@@ -136,6 +154,7 @@ namespace NDBackuper
             }
             else
             {
+                this.Log += "Destination database version is higher than source." + Environment.NewLine;
                 return false;
             }
         }
@@ -232,7 +251,10 @@ namespace NDBackuper
                     {
                         ds.Tables["Jobs"].Rows.Cast<DataRow>().Where(j => (DateTime)j["Date"] < DateFrom || (DateTime)j["Date"] > DateTo).ToList().ForEach(j => j.Delete());
                     }
-                    ds.Tables["Jobs"].AcceptChanges();
+                    foreach (var tbl in sortTables)
+                    {
+                        ds.Tables[tbl].AcceptChanges();
+                    }
                 }
                 #endregion
 
@@ -259,11 +281,15 @@ namespace NDBackuper
                     if (ds.Tables["Jobs"].Rows.Count > 0)
                     {
                         ds.Tables["Jobs"].Rows.Cast<DataRow>().LastOrDefault().Delete(); // Always delete last record.
+                        ds.Tables["Jobs"].AcceptChanges();
                         if (IsDateFiltration)
                         {
                             ds.Tables["Jobs"].Rows.Cast<DataRow>().Where(j => (DateTime)j["Date"] < DateFrom || (DateTime)j["Date"] > DateTo).ToList().ForEach(j => j.Delete());
                         }
-                        ds.Tables["Jobs"].AcceptChanges();
+                        foreach (var tbl in sortTables)
+                        {
+                            ds.Tables[tbl].AcceptChanges();
+                        }
                     }
                     #endregion
 
@@ -310,6 +336,11 @@ namespace NDBackuper
                     }
                     #endregion
                 }
+                else
+                {
+                    this.Log += "*** Database upgrade failed ***" + Environment.NewLine;
+                    e.Result = false;
+                }
             }
             // DONE: 1.   Check destination database exsits.
             // DONE: 2.   If No date range, use transfer copy all database.
@@ -339,8 +370,15 @@ namespace NDBackuper
         }
         private void bgwValidateConnection_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            this.Log += "Backup Complete!!" + Environment.NewLine + Environment.NewLine;
-            this.Progress = 100;
+            if (e.Result != null && (bool)e.Result == false)
+            {
+                this.Log += "Backup Abort!!" + Environment.NewLine + Environment.NewLine;
+            }
+            else
+            {
+                this.Log += "Backup Complete!!" + Environment.NewLine + Environment.NewLine;
+                this.Progress = 100;
+            }
             this.IsCompleted = true;
         }
         private void bgwValidateConnection_ProgressChanged(object sender, ProgressChangedEventArgs e)
