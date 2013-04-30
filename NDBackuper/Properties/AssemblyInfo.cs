@@ -10,9 +10,9 @@ using System.Windows;
 [assembly: AssemblyTitle("NDBackuper")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("Wintriss")]
 [assembly: AssemblyProduct("NDBackuper")]
-[assembly: AssemblyCopyright("Copyright ©  2013")]
+[assembly: AssemblyCopyright("Copyright © 2013 Wintriss")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
