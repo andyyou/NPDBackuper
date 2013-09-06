@@ -29,6 +29,7 @@ namespace NDBackuper
         public List<string> SourceDatabases { get; set; }
         public Backuper BackupObject { get; set; }
         public ObservableCollection<CheckedListItem> ObservTables { get; set; }
+        private static System.Timers.Timer _timer = new System.Timers.Timer();
 
         #region Constructor
         public MainWindow()
@@ -183,17 +184,29 @@ namespace NDBackuper
         #region Page-5
         protected void btnRunBackup_Click(object sender, RoutedEventArgs e)
         {
-            // DONE: accomplist testing
-            List<CheckedListItem> backupTables = ObservTables.Where(o => o.IsChecked == true).ToList();
+            double interval = Convert.ToDouble(txtMin.Text) * 60 * 1000;
             BackupObject.IsDateFiltration = (bool)chkUseDateRange.IsChecked;
             if (BackupObject.IsDateFiltration)
             {
                 BackupObject.DateFrom = (DateTime)dpFrom.SelectedDate;
                 BackupObject.DateTo = (DateTime)dpTo.SelectedDate;
             }
-            // TODO: review code here.
-            BackupObject.Log += "Starting..." + Environment.NewLine;
-            BackupObject.RunBackup(backupTables);
+            if (interval <= 0)
+            {
+                // DONE: accomplist testing
+                List<CheckedListItem> backupTables = ObservTables.Where(o => o.IsChecked == true).ToList();
+                // TODO: review code here.
+                BackupObject.Log += "Starting..." + Environment.NewLine;
+                BackupObject.RunBackup(backupTables);
+            }
+            else
+            {
+                _timer.Interval = interval;
+                _timer.Elapsed += _timer_Tick;
+                _timer.Enabled = true;
+            }
+            txtMin.IsEnabled = false;
+            btnRunBackup.IsEnabled = false;
         }
 
         private void txtLog_TextChanged(object sender, TextChangedEventArgs e)
@@ -463,6 +476,45 @@ namespace NDBackuper
         {
         }
         #endregion
+
+        private void txtMin_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            if (!isNumberic(e.Text))
+            {
+                e.Handled = true;
+            }
+            else
+            {
+                e.Handled = false;
+            }
+        }
+
+        private void _timer_Tick(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            //BackupObject.Log += "Timer Elapsed!" + Environment.NewLine;
+            // DONE: accomplist testing
+            List<CheckedListItem> backupTables = ObservTables.Where(o => o.IsChecked == true).ToList();
+            // TODO: review code here.
+            BackupObject.Log += "Starting..." + Environment.NewLine;
+            BackupObject.RunBackup(backupTables);
+        }
+
+        //isDigit是否是数字
+        public static bool isNumberic(string data)
+        {
+            if (string.IsNullOrEmpty(data))
+            {
+                return false;
+            }
+            foreach (char c in data)
+            {
+                if (!char.IsDigit(c))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
 
         
     }

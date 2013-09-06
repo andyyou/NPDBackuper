@@ -17,7 +17,7 @@
             <cv:BooleanToImagePath x:Key="boolToImageSource"/>
             <cv:IntToBool x:Key="intToBoolean"/>
         </Grid.Resources>
-        <aw:Wizard x:Name="wzdMain" aw:Designer.PageIndex="1" Cancelled="wzdMain_Cancelled" Finished="wzdMain_Finished">
+        <aw:Wizard x:Name="wzdMain" aw:Designer.PageIndex="4" Cancelled="wzdMain_Cancelled" Finished="wzdMain_Finished">
 
             <aw:WizardPage x:Name="wzdPage1" Header="Source Configurations"  Commit="Wizard_Commit">
                 <StackPanel>
@@ -272,6 +272,10 @@
                            Converter={StaticResource intToBoolean}}">
                 <StackPanel>
                     <Grid Margin="35 5 20 5">
+                        <Label Content="Loop Time(Min.): " Margin="0,5,364,5" />
+                        <TextBox x:Name="txtMin" Margin="115,5,270,5" Text="60" PreviewTextInput="txtMin_PreviewTextInput" />
+                    </Grid>
+                    <Grid Margin="35 15 20 5">
                         <ProgressBar  x:Name="pgbBackup" 
                                       HorizontalAlignment="Left" 
                                       VerticalAlignment="Top" 
@@ -302,7 +306,7 @@
                              TextWrapping="Wrap"
                              VerticalScrollBarVisibility="Visible"
                              AcceptsReturn="True"
-                             Text="{Binding Path=BackupObject.Log}"
+                             Text="{Binding BackupObject.Log}"
                              TextChanged="txtLog_TextChanged"
                              />
 
