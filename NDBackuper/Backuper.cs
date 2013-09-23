@@ -16,15 +16,20 @@ namespace NDBackuper
 {
     public class Backuper : INotifyPropertyChanged
     {
-        private int progress = 0;
-        private bool iscomplete = true;
+        // 準備所有需要的參數
+        private int progress = 0;     
+        private bool iscomplete = true;     
         private string log = "Ready to run backup." + Environment.NewLine;
-        public ConnectionConfig Source { get; set; }
+        private string status = "None";
+        private double interval = 60000;
+        public ConnectionConfig Source { get; set; } 
         public ConnectionConfig Destination { get; set; }
         
         public DateTime DateFrom { get; set; }
         public DateTime DateTo { get; set; }
         public bool IsDateFiltration { get; set; }
+
+        #region WPF 自動 BINDING 的 Properties
         public int Progress
         {
             get { return progress; }
@@ -52,7 +57,24 @@ namespace NDBackuper
                 iscomplete = value;
                 RaisePropertyChanged("IsCompleted");
             }
-        } 
+        }
+        public string Status
+        {
+            get { return status; }
+            set
+            {
+                status = value;
+                RaisePropertyChanged("Status");
+            }
+        }
+        public double Interval
+        {
+            get { return interval; }
+            set {
+                interval = value;
+                RaisePropertyChanged("Interval");
+            }
+        }
         public event PropertyChangedEventHandler PropertyChanged;
         protected virtual void RaisePropertyChanged(String propertyName)
         {
@@ -61,8 +83,9 @@ namespace NDBackuper
                 PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
             }
         }
+        #endregion
 
-
+        #region 建構子
         public Backuper(ConnectionConfig source, ConnectionConfig destination)
         {
             this.Source           = source;
@@ -70,6 +93,7 @@ namespace NDBackuper
             this.IsCompleted      = true;
             this.IsDateFiltration = false;
         }
+        #endregion
 
         #region Method
         /// <summary>
@@ -81,13 +105,13 @@ namespace NDBackuper
             // Set progress to zero before run backup
             this.Progress = 5;
             this.IsCompleted = false;
-            // TODO: 執行緒晚點再移
             BackgroundWorker bgw      = new BackgroundWorker();
-            bgw.DoWork               += bgwValidateConnection_DoWorkHandler;
-            bgw.RunWorkerCompleted   += bgwValidateConnection_RunWorkerCompleted;
-            bgw.ProgressChanged      += bgwValidateConnection_ProgressChanged;
+            bgw.DoWork               += bgwValidateConnection_DoWorkHandler;            // 多執行緒跑備份
+            bgw.RunWorkerCompleted   += bgwValidateConnection_RunWorkerCompleted;       // 完成時顯示訊息
+            bgw.ProgressChanged      += bgwValidateConnection_ProgressChanged;          // Nothing to do here.
             bgw.WorkerReportsProgress = true;
-            bgw.RunWorkerAsync(backupTables);
+            this.Status = "Processing...";
+            bgw.RunWorkerAsync(backupTables);                                           // 開始跑
         }
         /// <summary>
         /// Clear data for merge override table
@@ -159,6 +183,10 @@ namespace NDBackuper
             }
         }
 
+        public void ResetStatus(string msg)
+        {
+            this.Status = msg;
+        }
         /// <summary>
         /// Upgrade database
         /// </summary>
@@ -210,6 +238,7 @@ namespace NDBackuper
             {
                 List<CheckedListItem> backupTables = e.Argument as List<CheckedListItem>;
                 Smo.Server srvDestination = new Smo.Server(Destination.ServerConnection);
+                // 如果Db不存在
                 if (!srvDestination.Databases.Contains(Destination.Database))
                 {
                     #region Create Database and Copy Table sechma
@@ -276,7 +305,8 @@ namespace NDBackuper
                 {
                     if (CheckVersion())
                     {
-                        // TODO: now todo here.
+                        // TODO: Job 這邊無法判斷
+
                         #region Get Source Data and Filter date range
                         DataSet ds = DbHelper.CopySechmaFromDatabase(Source.ConnectionString());
                         List<string> sortTables = DbHelper.Fill(Source.ConnectionString(), ds, backupTables.Select(b => b.Name).ToList());
@@ -385,9 +415,11 @@ namespace NDBackuper
             else
             {
                 this.Log += "Backup Complete!!" + Environment.NewLine + Environment.NewLine;
-                this.Progress = 100;
+                this.Progress = 0;
+                this.Status = String.Format("Wait for processing at {0}", DateTime.Now.AddMilliseconds(this.Interval).ToString());
+
             }
-            this.IsCompleted = true;
+            this.IsCompleted = false;
         }
         private void bgwValidateConnection_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {

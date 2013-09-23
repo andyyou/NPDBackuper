@@ -275,6 +275,10 @@
                         <Label Content="Loop Time(Min.): " Margin="0,5,364,5" />
                         <TextBox x:Name="txtMin" Margin="115,5,270,5" Text="60" PreviewTextInput="txtMin_PreviewTextInput" />
                     </Grid>
+                    <Grid Margin="35 5 20 5">
+                        <Label Margin="10,10,0,5" x:Name="lb" Content="Status: " HorizontalAlignment="Left" Width="70" RenderTransformOrigin="-0.2,0.28" />
+                        <Label Margin="120,10,0,5" x:Name="lbStatus" Content="{Binding Path=BackupObject.Status}" />
+                    </Grid>
                     <Grid Margin="35 15 20 5">
                         <ProgressBar  x:Name="pgbBackup" 
                                       HorizontalAlignment="Left" 

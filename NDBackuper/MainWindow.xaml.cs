@@ -204,6 +204,11 @@ namespace NDBackuper
                 _timer.Interval = interval;
                 _timer.Elapsed += _timer_Tick;
                 _timer.Enabled = true;
+                _timer.AutoReset = true;
+                // Show Status
+                BackupObject.Interval = interval;
+                BackupObject.Status = String.Format("Wait for processing at {0}", DateTime.Now.AddMilliseconds(interval).ToString());
+                // lbStatus.Content = String.Format("Status: Wait for processing at {0}", DateTime.Now.AddMilliseconds(interval).ToString());
             }
             txtMin.IsEnabled = false;
             btnRunBackup.IsEnabled = false;
@@ -488,16 +493,36 @@ namespace NDBackuper
                 e.Handled = false;
             }
         }
-
+        
         private void _timer_Tick(object sender, System.Timers.ElapsedEventArgs e)
         {
+           
             //BackupObject.Log += "Timer Elapsed!" + Environment.NewLine;
             // DONE: accomplist testing
             List<CheckedListItem> backupTables = ObservTables.Where(o => o.IsChecked == true).ToList();
             // TODO: review code here.
             BackupObject.Log += "Starting..." + Environment.NewLine;
+            // Show Status
+            BackupObject.Status = String.Format("Wait for processing at {0}", DateTime.Now.AddMilliseconds(_timer.Interval).ToString());
+            // UpdateLabel("Status: Processing ...");
             BackupObject.RunBackup(backupTables);
         }
+
+        #region For UI Thread change status label
+        //delegate void UpdateLabelCallback(string txt);
+        //private void UpdateLabel(string txt)
+        //{
+        //    if (lbStatus.Dispatcher.CheckAccess() == false)
+        //    {
+        //        UpdateLabelCallback uCallBack = new UpdateLabelCallback(UpdateLabel);
+        //        this.Dispatcher.Invoke(uCallBack, txt);
+        //    }
+        //    else
+        //    {
+        //        lbStatus.Content = txt;
+        //    }
+        //}
+        #endregion
 
         //isDigit是否是数字
         public static bool isNumberic(string data)

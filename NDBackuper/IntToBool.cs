@@ -16,13 +16,13 @@ namespace NDBackuper.Converters
             try
             {
                 var x = int.Parse(value.ToString());
-                if (x != 100)
+                if (x == 100 || x == 0)
                 {
-                    return false;
+                    return true;
                 }
                 else
                 {
-                    return true;
+                    return false;
                 }
             }
             catch (Exception)
