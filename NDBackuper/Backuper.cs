@@ -340,10 +340,43 @@ namespace NDBackuper
                                     int newkey = (int)lastkey + 1;
                                     int row = ds.Tables[tbl].Rows.Count;
                                     ds.Tables[tbl].Columns[keycolumn].ReadOnly = false;
+
+                                    #region Delete Duplicate First
                                     for (int i = row - 1; i >= 0; i--)
                                     {
+                                        // check duplicate 
+                                        string sqlCheckDataDuplicate;
+                                        int? duplicateNum;
+                                        switch (tbl)
+                                        {
+                                            case "MCS":
+                                                // NOTE: MCS sechma will appear many wrong situation.
+                                                string sName = ds.Tables[tbl].Rows[i]["sName"].ToString();
+                                                string pkMCS = ds.Tables[tbl].Rows[i]["pkMCS"].ToString();
+                                                sqlCheckDataDuplicate = string.Format("Select Count(*) From MCS Where sName='{0}' AND pkMCS='{1}'", sName, pkMCS);
+                                                duplicateNum = (int?)(DbHelper.ReadOne(Destination.ConnectionString(), sqlCheckDataDuplicate));
+                                                if (duplicateNum > 0)
+                                                {
+                                                    ds.Tables[tbl].Rows[i].Delete();
+                                                }
+                                                break;
+                                            default:
+                                               
+                                                break;
+                                        }
+                                        ds.Tables[tbl].AcceptChanges();
+                                    }
+                                    #endregion
+
+                                    #region Change KEY
+                                    row = ds.Tables[tbl].Rows.Count;
+                                    for (int i = row - 1; i >= 0; i--)
+                                    {
+                                        
                                         ds.Tables[tbl].Rows[i][keycolumn] = newkey + i;
                                     }
+                                    #endregion
+
                                     ds.Tables[tbl].AcceptChanges();
                                 }
                             }
@@ -375,9 +408,10 @@ namespace NDBackuper
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 this.Log += "An error occurred during backup database." + Environment.NewLine;
+                this.Log += ex.Message.ToString() + Environment.NewLine;
                 e.Result = false;
             }
             // DONE: 1.   Check destination database exsits.
