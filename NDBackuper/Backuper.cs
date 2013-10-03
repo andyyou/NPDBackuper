@@ -309,6 +309,7 @@ namespace NDBackuper
 
                         #region Get Source Data and Filter date range
                         DataSet ds = DbHelper.CopySechmaFromDatabase(Source.ConnectionString());
+                        // 根據選擇的 table list 排序後 Fill 並且回傳一個 list of table name 
                         List<string> sortTables = DbHelper.Fill(Source.ConnectionString(), ds, backupTables.Select(b => b.Name).ToList());
                         if (ds.Tables["Jobs"].Rows.Count > 0)
                         {
@@ -328,10 +329,18 @@ namespace NDBackuper
                         #region Get destination PK list of table exists and modify for merge
                         // filter override table don't modify key
                         List<string> overrideTable = backupTables.Where(b => b.IsOverride == true).Select(b => b.Name).ToList();
-                        foreach (string tbl in sortTables)
+                        foreach (string tbl in sortTables) // 全部的 table 抓完之後再根據 overrideTable 清空
                         {
                             if (!overrideTable.Contains(tbl))
                             {
+                                /****
+                                 * 1. get table's pk column name first
+                                 * 2. get lastkey value for change new key = lastkey + 1
+                                 * 3. delete duplicate row from mcs now.
+                                 * 4. modify key value
+                                 * 5. clear destination database override table
+                                 * 6. excute sqlbulk
+                                *****/
                                 string keycolumn = DbHelper.PrimaryKeyColumn(Destination.ConnectionString(), tbl);
                                 string sql = string.Format("Select TOP 1 {0} From {1} Order By {0} DESC", keycolumn, tbl);
                                 int? lastkey = (int?)(DbHelper.ReadOne(Destination.ConnectionString(), sql));
@@ -349,11 +358,10 @@ namespace NDBackuper
                                         int? duplicateNum;
                                         switch (tbl)
                                         {
-                                            case "MCS":
-                                                // NOTE: MCS sechma will appear many wrong situation.
-                                                string sName = ds.Tables[tbl].Rows[i]["sName"].ToString();
-                                                string pkMCS = ds.Tables[tbl].Rows[i]["pkMCS"].ToString();
-                                                sqlCheckDataDuplicate = string.Format("Select Count(*) From MCS Where sName='{0}' AND pkMCS='{1}'", sName, pkMCS);
+                                            case "Jobs":
+                                                string klKey = ds.Tables[tbl].Rows[i]["klKey"].ToString();
+                                                string Date = ds.Tables[tbl].Rows[i]["Date"].ToString();
+                                                sqlCheckDataDuplicate = string.Format("Select Count(*) From Jobs Where klKey='{0}' AND Date='{1}'", klKey, Date);
                                                 duplicateNum = (int?)(DbHelper.ReadOne(Destination.ConnectionString(), sqlCheckDataDuplicate));
                                                 if (duplicateNum > 0)
                                                 {
@@ -371,8 +379,7 @@ namespace NDBackuper
                                     #region Change KEY
                                     row = ds.Tables[tbl].Rows.Count;
                                     for (int i = row - 1; i >= 0; i--)
-                                    {
-                                        
+                                    {    
                                         ds.Tables[tbl].Rows[i][keycolumn] = newkey + i;
                                     }
                                     #endregion
@@ -412,6 +419,7 @@ namespace NDBackuper
             {
                 this.Log += "An error occurred during backup database." + Environment.NewLine;
                 this.Log += ex.Message.ToString() + Environment.NewLine;
+                this.Status = "Fail";
                 e.Result = false;
             }
             // DONE: 1.   Check destination database exsits.
